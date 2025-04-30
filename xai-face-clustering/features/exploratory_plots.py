@@ -22,6 +22,7 @@ features = []
 labels = []  # 0 for real, 1 for fake
 texture_values = []
 edge_densities = []
+symmetry_scores = []
 
 # Helper functions
 def extract_features(img):
@@ -36,7 +37,17 @@ def extract_features(img):
     edges = cv2.Canny(gray, 100, 200)
     edge_density = np.sum(edges > 0) / (IMG_SIZE[0] * IMG_SIZE[1])
 
-    return lbp_hist, texture_var, edge_density
+    # Symmetry score (MSE between left and right halves)
+    h, w = gray.shape
+    left_half = gray[:, :w // 2]
+    right_half = np.fliplr(gray[:, w - w // 2:])
+    if left_half.shape != right_half.shape:
+        min_width = min(left_half.shape[1], right_half.shape[1])
+        left_half = left_half[:, :min_width]
+        right_half = right_half[:, :min_width]
+    symmetry_score = np.mean((left_half - right_half) ** 2)
+
+    return lbp_hist, texture_var, edge_density, symmetry_score
 
 def process_directory(directory, label):
     for fname in tqdm(os.listdir(directory)):
@@ -44,10 +55,11 @@ def process_directory(directory, label):
         img = cv2.imread(fpath)
         if img is not None:
             img = cv2.resize(img, IMG_SIZE)
-            lbp_hist, tex_var, edge_dens = extract_features(img)
+            lbp_hist, tex_var, edge_dens, sym_score = extract_features(img)
             features.append(lbp_hist)
             texture_values.append(tex_var)
             edge_densities.append(edge_dens)
+            symmetry_scores.append(sym_score)
             labels.append(label)
 
 # Process images
@@ -92,4 +104,16 @@ plt.title('Edge Density Comparison')
 plt.ylabel('Edge Pixel Proportion')
 plt.grid(True)
 plt.savefig(os.path.join(OUTPUT_DIR, 'boxplot_edge_density.png'))
+plt.show()
+
+# Plot 4: Symmetry Score Histogram
+plt.figure(figsize=(8, 6))
+plt.hist(np.array(symmetry_scores)[np.array(labels) == 0], bins=30, alpha=0.5, label='Real')
+plt.hist(np.array(symmetry_scores)[np.array(labels) == 1], bins=30, alpha=0.5, label='AI-Generated')
+plt.legend()
+plt.title('Histogram of Symmetry Scores')
+plt.xlabel('Symmetry Score (MSE between halves)')
+plt.ylabel('Count')
+plt.grid(True)
+plt.savefig(os.path.join(OUTPUT_DIR, 'histogram_symmetry_scores.png'))
 plt.show()
