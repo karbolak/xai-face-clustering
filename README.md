@@ -1,3 +1,13 @@
+# Our README
+
+## Install current requirements with:
+conda install --yes --file requirements.txt
+
+
+
+
+
+
 # Applied ML Template 🛠️
 
 **Welcome to Applied Machine Learning!** This template is designed to streamline the development process and boost the quality of your code.

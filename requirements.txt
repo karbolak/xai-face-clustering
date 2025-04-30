@@ -1,0 +1,8 @@
+numpy
+matplotlib
+opencv
+scikit-learn
+scikit-image
+mahotas
+tqdm
+umap-learn
