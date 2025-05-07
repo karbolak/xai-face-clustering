@@ -1,11 +1,24 @@
 # Our README
 
 ## Install current requirements with:
-Via Conda, run in terminal:
-```zsh
-conda install --yes --file requirements.txt
-```
-If using pip, update **requirements.txt** commands(*opencv -> opencv-python*, *pytorch -> torch*) and run in terminal:
+Via Conda:
+    - Create a new environment via:
+        ```zsh
+        conda create -n {name_of_env}
+        ```
+    - Activate your new environment:
+        ```zsh
+        conda activate {name_of_env}
+        ```
+    - Add conda-forge to your environment's channels, such that packages(e.g: mahotas) are available:
+        ```zsh
+        conda config --add channels conda-forge
+        ```
+    - Install requirements through:
+    ```zsh
+    conda install --yes --file requirements.txt
+    ```
+Via pip, update **requirements.txt** commands(*opencv -> opencv-python*, *pytorch -> torch*) and run in terminal:
 ```zsh
 pip install -r requirements.txt
 ```
