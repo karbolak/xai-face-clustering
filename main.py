@@ -1,10 +1,10 @@
 import argparse
-from xai_face_clustering.data.loader import load_images
-from xai_face_clustering.features.cnn_embeddings import extract_embeddings
-from xai_face_clustering.features.pca import apply_pca
-from xai_face_clustering.models.clustering import cluster_embeddings
-from xai_face_clustering.models.surrogate import train_surrogate_model
-from xai_face_clustering.models.xai import run_shap_explanation
+from scripts.xai_face_clustering.data.loader import load_images
+from scripts.xai_face_clustering.features.cnn_embeddings import extract_embeddings
+from scripts.xai_face_clustering.features.pca import apply_pca
+from scripts.xai_face_clustering.models.clustering import cluster_embeddings
+from scripts.xai_face_clustering.models.surrogate import train_surrogate_model
+from scripts.xai_face_clustering.models.xai import run_shap_explanation
 
 
 def main(args):

@@ -1,5 +1,5 @@
 import pytest
-from xai_face_clustering.data.loader import load_images
+from scripts.xai_face_clustering.data.loader import load_images
 
 def test_load_images_shape():
     images, labels, filenames = load_images("xai_face_clustering/data/Human_Faces_Dataset")
