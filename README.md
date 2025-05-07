@@ -1,8 +1,13 @@
 # Our README
 
 ## Install current requirements with:
+Via Conda, run in terminal:
 ```zsh
 conda install --yes --file requirements.txt
+```
+If using pip, update **requirements.txt** commands(*opencv -> opencv-python*, *pytorch -> torch*) and run in terminal:
+```zsh
+pip install -r requirements.txt
 ```
 
 ## Test with:
@@ -44,7 +49,7 @@ PYTHONPATH=. pytest --cov=xai_face_clustering tests/
 └── **init**.py
 ```
 
-• main.py
+• **_main.py_**
 
     Role: The orchestrator of the pipeline.
 
@@ -62,7 +67,7 @@ PYTHONPATH=. pytest --cov=xai_face_clustering tests/
 
     Structure: Use argparse to control mode (e.g., --visualize, --cluster, --explain).
 
-• xai-face-clustering/data/
+• **xai-face-clustering/data/**
 
     Purpose:
 
@@ -76,7 +81,7 @@ PYTHONPATH=. pytest --cov=xai_face_clustering tests/
 
         Optionally cache resized versions
 
-• xai-face-clustering/features/exploratory_plots.py
+• **xai-face-clustering/features/_exploratory_plots.py_**
 
     Purpose:
 
@@ -92,7 +97,7 @@ PYTHONPATH=. pytest --cov=xai_face_clustering tests/
 
     Can be imported by main.py when --visualize is passed
 
-• xai-face-clustering/features/
+• **xai-face-clustering/features/**
 
     General feature logic:
 
@@ -102,7 +107,7 @@ PYTHONPATH=. pytest --cov=xai_face_clustering tests/
 
         scaler.py (optional) → apply and persist StandardScaler.
 
-• xai-face-clustering/models/
+• **xai-face-clustering/models/**
 
     Purpose:
 
@@ -125,8 +130,13 @@ PYTHONPATH=. pytest --cov=xai_face_clustering tests/
         xai.py
 
             run_shap_explanation() and/or run_lime_explanation()
+• **xai-face-clustering/features/_pca.py_**
+    This is a heavy file, takes a lot of RAM and time to run, hence, to achieve a smoother flow, the implementation checks for caches.
+    Procedure:
+        The file will be run only once, on its first attempt. 
+        In future attempts, the newly ran main will access a saved path, path which stores cached features.
 
-• tests/
+• **tests/**
 
     Contains:
 
@@ -269,3 +279,4 @@ Your repository should look something like this:
 
 **Good luck and happy coding! 🚀**
 -->
+
