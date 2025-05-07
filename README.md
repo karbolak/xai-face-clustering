@@ -1,14 +1,148 @@
 # Our README
 
 ## Install current requirements with:
+```zsh
 conda install --yes --file requirements.txt
+```
+
+## Test with:
+```zsh
+PYTHONPATH=. pytest --cov=xai_face_clustering tests/  
+```
+
+## Project setup
+
+![Flowchart part 1](flowchart_1.png "Flowchart part 1")
+![Flowchart part 2](flowchart_2.png "Flowchart part 2")
+
+## Project structure
+
+```zsh
+├── **init**.py
+├── main.py
+├── README.md
+├── requirements.txt
+├── tests
+│   ├── data
+│   │   └── **init**.py
+│   ├── features
+│   │   └── **init**.py
+│   ├── **init**.py
+│   ├── models
+│   │   └── **init**.py
+│   └── test\_main.py
+└── xai-face-clustering
+├── data
+│   ├── Human\_Faces\_Dataset
+│   └── **init**.py
+├── features
+│   ├── exploratory\_plots
+│   ├── exploratory\_plots.py
+│   └── **init**.py
+├── **init**.py
+└── models
+└── **init**.py
+```
+
+• main.py
+
+    Role: The orchestrator of the pipeline.
+
+    Calls:
+
+        Data loading
+
+        Feature extraction
+
+        Dimensionality reduction
+
+        Clustering
+
+        Surrogate model + XAI explanation
+
+    Structure: Use argparse to control mode (e.g., --visualize, --cluster, --explain).
+
+• xai-face-clustering/data/
+
+    Purpose:
+
+        Stores raw datasets.
+
+        Includes loaders or utilities for reading images, resizing, and normalizing.
+
+    To implement:
+
+        load_images() → returns image tensors + filenames
+
+        Optionally cache resized versions
+
+• xai-face-clustering/features/exploratory_plots.py
+
+    Purpose:
+
+        Handles EDA: plots of texture, symmetry, t-SNE, etc.
+
+    Functions:
+
+        plot_texture_histogram(...)
+
+        plot_edge_boxplot(...)
+
+        plot_tsne_projection(...)
+
+    Can be imported by main.py when --visualize is passed
+
+• xai-face-clustering/features/
+
+    General feature logic:
+
+        cnn_embeddings.py (to create) → extract features via forward hooks from pretrained models.
+
+        pca.py (to create) → handles dimensionality reduction.
+
+        scaler.py (optional) → apply and persist StandardScaler.
+
+• xai-face-clustering/models/
+
+    Purpose:
+
+        Encapsulates model logic for clustering and surrogate model.
+
+        Keeps separation of concerns.
+
+    Suggested files:
+
+        clustering.py
+
+            cluster_embeddings(): K-Means / DBSCAN
+
+        surrogate.py
+
+            train_surrogate_model()
+
+            predict_and_explain()
+
+        xai.py
+
+            run_shap_explanation() and/or run_lime_explanation()
+
+• tests/
+
+    Contains:
+
+        test_main.py: checks CLI calls and pipeline integrity
+
+        tests/data/: mock datasets
+
+        tests/features/: test edge cases in preprocessing
+
+        tests/models/: unit tests for clustering, surrogate, and explanation steps
 
 
 
-
-
-
+<!---
 # Applied ML Template 🛠️
+
 
 **Welcome to Applied Machine Learning!** This template is designed to streamline the development process and boost the quality of your code.
 
@@ -134,3 +268,4 @@ Your repository should look something like this:
 ```
 
 **Good luck and happy coding! 🚀**
+-->

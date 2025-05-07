@@ -1,8 +1,27 @@
+# Core
+pytorch>=1.13 # if you're using pip, use torch
+torchvision
 numpy
-matplotlib
-opencv
 scikit-learn
-scikit-image
-mahotas
-tqdm
+matplotlib
+pandas
+opencv # if you're using pip, use opencv-python
+
+# Explainability
+shap # If shap gives warnings related to numba, just lmk -- there's a known fix
+lime
+
+# Visualization
 umap-learn
+seaborn
+mahotas
+scikit-image
+
+
+# Testing
+pytest
+pytest-cov
+
+# Utility
+tqdm
+joblib
