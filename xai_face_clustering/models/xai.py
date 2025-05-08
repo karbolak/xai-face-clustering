@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-EXPLAIN_DIR = "xai-face-clustering/features/shap_explanations"
+EXPLAIN_DIR = "xai_face_clustering/features/shap_explanations"
 os.makedirs(EXPLAIN_DIR, exist_ok=True)
 
 def run_shap_explanation(model, X, cluster_labels, num_examples=5):

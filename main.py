@@ -1,25 +1,31 @@
 import argparse
+import os
 from xai_face_clustering.data.loader import load_images
 from xai_face_clustering.features.cnn_embeddings import extract_embeddings
 from xai_face_clustering.features.pca import apply_pca
 from xai_face_clustering.models.clustering import cluster_embeddings
 from xai_face_clustering.models.surrogate import train_surrogate_model
 from xai_face_clustering.models.xai import run_shap_explanation
-
+from xai_face_clustering.features.pca_variance_plot import plot_pca_variance
 
 def main(args):
-    """_summary_
-        This script will serve as our entry point and support modular execution
-        (e.g., clustering only, or visualisation only).
+    cache_path = "xai_face_clustering/features/embeddings.npz"
 
-        Args:
-            args (_type_): _description_
-    """
-    print("[INFO] Loading images...")
-    images, labels, filenames = load_images(args.data_dir)
+    if os.path.exists(cache_path):
+        print("[INFO] Cached embeddings found, skipping image loading...")
+        images = None
+        filenames = None
+        labels = None
+    else:
+        print("[INFO] Loading images...")
+        images, labels, filenames = load_images(args.data_dir)
 
     print("[INFO] Extracting embeddings...")
-    embeddings = extract_embeddings(images, model_name=args.model)
+    embeddings, filenames, labels = extract_embeddings(
+        images, filenames=filenames, labels=labels, model_name=args.model, cache_path=cache_path
+    )
+
+    plot_pca_variance(embeddings, "xai_face_clustering/features/exploratory_plots/pca_explained_variance.png")
 
     print("[INFO] Applying PCA...")
     reduced = apply_pca(embeddings, n_components=args.pca_components)
@@ -32,7 +38,6 @@ def main(args):
 
     print("[INFO] Running SHAP explanation...")
     run_shap_explanation(surrogate_model, reduced, cluster_ids)
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="XAI Face Clustering Pipeline")
