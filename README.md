@@ -38,6 +38,14 @@ pip install -r requirements.txt
 PYTHONPATH=. pytest --cov=xai_face_clustering tests/  
 ```
 
+## Add embedding files with git lfs (for future reference):
+```zsh
+git lfs install # I've done all of that already
+git lfs track "*.npz"
+git add .gitattributes
+git add xai_face_clustering/features/embeddings.npz 
+```
+
 ## Project setup
 
 ![Flowchart part 1](flowchart_1.png "Flowchart part 1")
