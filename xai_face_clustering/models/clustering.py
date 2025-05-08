@@ -1,24 +1,19 @@
 from sklearn.cluster import KMeans, DBSCAN
-from sklearn.metrics import silhouette_score
+from sklearn.metrics import silhouette_score, adjusted_rand_score
 import numpy as np
 
-def cluster_embeddings(embeddings, method="kmeans", **kwargs):
+def cluster_embeddings(embeddings, method="kmeans", evaluate_stability=False, **kwargs):
     """
-        Clusters embeddings using the specified method.
-        
-        Also:
-            Silhouette score is a good sanity check for clustering quality.
-            For DBSCAN:
-                Points labeled -1 are considered noise.
-                Parameters like n_clusters, eps, and min_samples are passed from main.py.
+    Cluster embeddings using the specified method and optionally evaluate clustering stability.
 
-        Args:
-            embeddings (np.ndarray): (N, D) array of feature vectors.
-            method (str): "kmeans" or "dbscan"
-            kwargs: clustering-specific parameters.
+    Args:
+        embeddings (np.ndarray): Feature vectors (N, D).
+        method (str): "kmeans" or "dbscan".
+        evaluate_stability (bool): Whether to perform repeated clustering for stability.
+        kwargs: Additional clustering parameters.
 
-        Returns:
-            cluster_labels (np.ndarray): Array of cluster assignments (shape: N,)
+    Returns:
+        cluster_labels (np.ndarray): Cluster assignments for each point.
     """
     if method == "kmeans":
         k = kwargs.get("n_clusters", 2)
@@ -32,11 +27,21 @@ def cluster_embeddings(embeddings, method="kmeans", **kwargs):
 
     cluster_labels = model.fit_predict(embeddings)
 
-    # Optional: print silhouette score if labels are valid
     if len(set(cluster_labels)) > 1 and -1 not in set(cluster_labels):
         score = silhouette_score(embeddings, cluster_labels)
         print(f"[INFO] Silhouette Score: {score:.3f}")
     else:
-        print("[WARN] Cannot compute silhouette score: only 1 cluster or noise points present.")
+        print("[WARN] Cannot compute silhouette score: only one cluster or noise detected.")
+
+    if evaluate_stability and method == "kmeans":
+        print("[INFO] Evaluating clustering stability over multiple runs...")
+        scores = []
+        for seed in range(5, 10):
+            km = KMeans(n_clusters=k, random_state=seed)
+            labels_alt = km.fit_predict(embeddings)
+            ari = adjusted_rand_score(cluster_labels, labels_alt)
+            scores.append(ari)
+        avg_ari = np.mean(scores)
+        print(f"[INFO] Avg Adjusted Rand Index (5 runs): {avg_ari:.3f}")
 
     return cluster_labels
