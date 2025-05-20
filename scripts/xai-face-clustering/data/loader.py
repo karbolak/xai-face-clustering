@@ -11,7 +11,7 @@ IMAGE_SIZE = (224, 224)
 def load_images(data_dir):
     """_summary_
         This function will:
-        - Traverse the data_dir and read images from both subfolders (e.g., Real_Images, AI-Generated_Images)
+        - Traverse the data_dir and read images from both subfolders (e.g., real, fake)
         - Resize to 224x224
         - Normalize using ImageNet mean/std
         - Return a list of preprocessed tensors and associated metadata
@@ -35,8 +35,8 @@ def load_images(data_dir):
     filenames = []
 
     label_map = {
-        "Real_Images": 0,
-        "AI-Generated_Images": 1
+        "real": 0,
+        "fake": 1
     }
 
     print(f"[INFO] Reading from: {data_dir}")

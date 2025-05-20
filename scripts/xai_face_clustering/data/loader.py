@@ -35,8 +35,10 @@ def load_images(data_dir):
     filenames = []
 
     label_map = {
-        "Real_Images": 0,
-        "AI-Generated_Images": 1
+        # "Real_Images": 0,
+        # "AI-Generated_Images": 1
+        "real": 0,
+        "fake": 1
     }
 
     print(f"[INFO] Reading from: {data_dir}")
