@@ -35,6 +35,9 @@ def main(args):
     print("[INFO] Applying PCA...")
     X_train_pca = apply_pca(X_train, n_components=args.pca_components, fit=True)
     X_test_pca = apply_pca(X_test, n_components=args.pca_components, fit=False)
+    
+    # X_train_pca = X_train
+    # X_test_pca = X_test
 
     print("[INFO] Clustering train/test sets...")
     y_train = cluster_embeddings(X_train_pca, method=args.cluster_method, evaluate_stability=True)
@@ -49,10 +52,10 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="XAI Face Clustering Pipeline")
     parser.add_argument("--data_dir", type=str, default="xai_face_clustering/data/Human_Faces_Dataset", help="Path to dataset")
-    parser.add_argument("--model", type=str, default="resnet50", help="Pretrained CNN model name")
+    parser.add_argument("--model", type=str, default="facenet", help="Pretrained CNN model name")
     parser.add_argument("--pca_components", type=int, default=100, help="PCA component count")
     parser.add_argument("--cluster_method", type=str, default="kmeans", choices=["kmeans", "dbscan"], help="Clustering method")
-    parser.add_argument("--surrogate", type=str, default="logreg", choices=["logreg", "tree"], help="Surrogate classifier")
+    parser.add_argument("--surrogate", type=str, default="svm", choices=["logreg", "tree", "svm"], help="Surrogate classifier")
 
     args = parser.parse_args()
     main(args)

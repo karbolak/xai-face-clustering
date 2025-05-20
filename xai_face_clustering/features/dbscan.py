@@ -5,9 +5,9 @@ from sklearn.preprocessing import StandardScaler
 import joblib
 
 DBSCAN_SAVE_PATH = "xai_face_clustering/models/dbscan_model.joblib"
-SCALER_SAVE_PATH = "xai_face_clustering/models/scaler.joblib"
+SCALER_SAVE_PATH = "xai_face_clustering/modes/scaler.joblib"
 
-def apply_dbscan(features, eps=0.5, min_samples=5, fit=True, save=True):
+def apply_dbscan(features, eps=0.8, min_samples=5, fit=True, save=True):
     """
     Fit and apply DBSCAN clustering
     Optionally save and load DBSCAN models using joblib

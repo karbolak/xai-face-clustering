@@ -6,6 +6,7 @@ scikit-learn
 matplotlib
 pandas
 opencv # if you're using pip, use opencv-python
+facenet-pytorch # only pip
 
 # Explainability
 shap # If shap gives warnings related to numba, just lmk -- there's a known fix
