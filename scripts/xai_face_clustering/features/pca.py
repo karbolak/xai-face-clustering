@@ -4,8 +4,8 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 import joblib
 
-PCA_SAVE_PATH = "scripts/xai-face-clustering/models/pca_model.joblib"
-SCALER_SAVE_PATH = "scripts/xai-face-clustering/models/scaler.joblib"
+PCA_SAVE_PATH = "scripts/xai_face_clustering/models/pca_model.joblib"
+SCALER_SAVE_PATH = "scripts/xai_face_clustering/models/scaler.joblib"
 
 def apply_pca(features, n_components=100, fit=True, save=True):
     """
