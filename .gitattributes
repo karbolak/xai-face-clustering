@@ -1,2 +1,2 @@
 *.npz filter=lfs diff=lfs merge=lfs -text
-scripts/xai_face_clustering/features/embeddings.npz filter=lfs diff=lfs merge=lfs -text
+xai_face_clustering/features/embeddings.npz filter=lfs diff=lfs merge=lfs -text
