@@ -3,40 +3,40 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-EXPLAIN_DIR = "xai_face_clustering/features/shap_explanations"
+EXPLAIN_DIR = "scripts/xai_face_clustering/features/shap_explanations"
 os.makedirs(EXPLAIN_DIR, exist_ok=True)
 
-def run_shap_explanation(model, X, cluster_labels=None, num_examples=5):
-    """
-    Generates SHAP explanations for a trained surrogate model.
-
-    Global view: summary_plot shows most important features across all data
-    Local view: waterfall plots explain individual predictions
-    Portable: Saved as .png so they can be reviewed without launching an interactive viewer
-
-    Args:
-        model: Trained scikit-learn classifier (LogReg / Tree)
-        X (np.ndarray): Feature vectors used for training
-        cluster_labels (np.ndarray): Corresponding cluster labels
-        num_examples (int): Number of individual examples to explain
-    """
+def run_shap_explanation(model, X, y=None, num_examples=5):
     print("[INFO] Explaining surrogate model using SHAP...")
-    explainer = shap.Explainer(model, X)
-    shap_values = explainer(X)
 
-    # Summary plot
-    plt.figure()
-    shap.summary_plot(shap_values, X, show=False)
-    plt.title("SHAP Summary Plot")
-    plt.savefig(os.path.join(EXPLAIN_DIR, "shap_summary_plot.png"))
-    plt.close()
+    # Summarize background using KMeans
+    print("[INFO] Summarizing background using k-means...")
+    background = shap.kmeans(X, 100)
 
-    for i in range(min(num_examples, len(X))):
+    # Use KernelExplainer for SVM, logistic regression, etc.
+    explainer = shap.KernelExplainer(model.predict_proba, background)
+    shap_values = explainer.shap_values(X, nsamples=100)  # Limit samples for speed
+
+    # Summary plot (global)
+    for i, class_vals in enumerate(shap_values):
         plt.figure()
-        shap.plots.waterfall(shap_values[i], show=False)
-        title = f"Test Example {i}" if cluster_labels is None else f"Test Example {i} → Cluster {cluster_labels[i]}"
-        plt.title(title)
-        plt.savefig(os.path.join(EXPLAIN_DIR, f"shap_explanation_{i}.png"))
+        shap.summary_plot(class_vals, X, show=False)
+        plt.title(f"SHAP Summary for Class {i}")
+        plt.savefig(os.path.join(EXPLAIN_DIR, f"shap_summary_class_{i}.png"))
         plt.close()
+
+    # Waterfall plots
+    for i in range(min(num_examples, len(X))):
+        try:
+            plt.figure()
+            shap.plots._waterfall.waterfall_legacy(class_vals[i], feature_names=[f"feat_{j}" for j in range(X.shape[1])])
+            if y is not None:
+                plt.title(f"Sample {i} – True: {y[i]}")
+            else:
+                plt.title(f"Sample {i}")
+            plt.savefig(os.path.join(EXPLAIN_DIR, f"shap_waterfall_{i}.png"))
+            plt.close()
+        except Exception as e:
+            print(f"[WARN] Failed to plot sample {i}: {e}")
 
     print(f"[INFO] SHAP visualizations saved to {EXPLAIN_DIR}")

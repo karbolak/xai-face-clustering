@@ -48,8 +48,8 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="XAI Face Clustering Pipeline")
-    parser.add_argument("--data_dir", type=str, default="xai_face_clustering/data/Human_Faces_ds", help="Path to dataset")
-    parser.add_argument("--model", type=str, default="resnet50", help="Pretrained CNN model name")
+    parser.add_argument("--data_dir", type=str, default="scripts/xai_face_clustering/data/Human_Faces_ds", help="Path to dataset")
+    parser.add_argument("--model", type=str, default="facenet", help="Pretrained CNN model name")
     parser.add_argument("--pca_components", type=int, default=100, help="PCA component count")
     parser.add_argument("--cluster_method", type=str, default="kmeans", choices=["kmeans", "dbscan"], help="Clustering method")
     parser.add_argument("--surrogate", type=str, default="logreg", choices=["logreg", "tree"], help="Surrogate classifier")
