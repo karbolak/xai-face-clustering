@@ -1,5 +1,5 @@
 import numpy as np
-from xai_face_clustering.models.surrogate import train_surrogate_model
+from scripts.xai_face_clustering.models.surrogate import train_surrogate_model
 
 def test_surrogate_fit_predict():
     X = np.random.rand(25, 60)

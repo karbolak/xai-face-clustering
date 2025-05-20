@@ -1,5 +1,5 @@
 import numpy as np
-from xai_face_clustering.models.clustering import cluster_embeddings
+from scripts.xai_face_clustering.models.clustering import cluster_embeddings
 
 def test_kmeans_labels():
     dummy_feats = np.random.rand(30, 50)

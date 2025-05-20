@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.linear_model import LogisticRegression
-from xai_face_clustering.models.xai import run_shap_explanation
+from scripts.xai_face_clustering.models.xai import run_shap_explanation
 
 def test_shap_explanation_runs(tmp_path):
     X = np.random.rand(10, 20)
