@@ -38,6 +38,14 @@ pip install -r requirements.txt
 PYTHONPATH=. pytest --cov=xai_face_clustering tests/  
 ```
 
+## Add embedding files with git lfs (for future reference):
+```zsh
+git lfs install # I've done all of that already
+git lfs track "*.npz"
+git add .gitattributes
+git add xai_face_clustering/features/embeddings.npz 
+```
+
 ## Project setup
 
 ![Flowchart part 1](flowchart_1.png "Flowchart part 1")
@@ -59,7 +67,7 @@ PYTHONPATH=. pytest --cov=xai_face_clustering tests/
 │   ├── models
 │   │   └── **init**.py
 │   └── test\_main.py
-└── xai-face-clustering
+└── xai_face_clustering
 ├── data
 │   ├── Human\_Faces\_Dataset
 │   └── **init**.py
@@ -90,7 +98,7 @@ PYTHONPATH=. pytest --cov=xai_face_clustering tests/
 
     Structure: Use argparse to control mode (e.g., --visualize, --cluster, --explain).
 
-• **xai-face-clustering/data/**
+• **xai_face_clustering/data/**
 
     Purpose:
 
@@ -104,7 +112,7 @@ PYTHONPATH=. pytest --cov=xai_face_clustering tests/
 
         Optionally cache resized versions
 
-• **xai-face-clustering/features/_exploratory_plots.py_**
+• **xai_face_clustering/features/_exploratory_plots.py_**
 
     Purpose:
 
@@ -120,7 +128,7 @@ PYTHONPATH=. pytest --cov=xai_face_clustering tests/
 
     Can be imported by main.py when --visualize is passed
 
-• **xai-face-clustering/features/**
+• **xai_face_clustering/features/**
 
     General feature logic:
 
@@ -130,7 +138,7 @@ PYTHONPATH=. pytest --cov=xai_face_clustering tests/
 
         scaler.py (optional) → apply and persist StandardScaler.
 
-• **xai-face-clustering/models/**
+• **xai_face_clustering/models/**
 
     Purpose:
 
@@ -153,7 +161,7 @@ PYTHONPATH=. pytest --cov=xai_face_clustering tests/
         xai.py
 
             run_shap_explanation() and/or run_lime_explanation()
-• **xai-face-clustering/features/_pca.py_**
+• **xai_face_clustering/features/_pca.py_**
     This is a heavy file, takes a lot of RAM and time to run, hence, to achieve a smoother flow, the implementation checks for caches.
     Procedure:
         The file will be run only once, on its first attempt. 

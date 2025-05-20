@@ -2,7 +2,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import classification_report
 
-def train_surrogate_model(X, cluster_labels, method="logreg"):
+def train_surrogate_model(X_train, y_train, X_test, y_test, method="logreg"):
     """
     Train a simple surrogate classifier to mimic clustering decisions.
     
@@ -25,10 +25,10 @@ def train_surrogate_model(X, cluster_labels, method="logreg"):
     else:
         raise ValueError(f"Unsupported surrogate model: {method}")
 
-    model.fit(X, cluster_labels)
-    preds = model.predict(X)
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
 
-    print("[INFO] Surrogate model performance:")
-    print(classification_report(cluster_labels, preds))
+    print("[INFO] Surrogate model test performance:")
+    print(classification_report(y_test, y_pred))
 
     return model
