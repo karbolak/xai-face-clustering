@@ -2,16 +2,16 @@ import argparse
 import os
 import numpy as np
 from sklearn.model_selection import train_test_split
-from xai_face_clustering.data.loader import load_images
-from xai_face_clustering.features.cnn_embeddings import extract_embeddings
-from xai_face_clustering.features.pca import apply_pca
-from xai_face_clustering.models.clustering import cluster_embeddings
-from xai_face_clustering.models.surrogate import train_surrogate_model
-from xai_face_clustering.models.xai import run_shap_explanation
-from xai_face_clustering.features.pca_variance_plot import plot_pca_variance
+from scripts.xai_face_clustering.data.loader import load_images
+from scripts.xai_face_clustering.features.cnn_embeddings import extract_embeddings
+from scripts.xai_face_clustering.features.pca import apply_pca
+from scripts.xai_face_clustering.models.clustering import cluster_embeddings
+from scripts.xai_face_clustering.models.surrogate import train_surrogate_model
+from scripts.xai_face_clustering.models.xai import run_shap_explanation
+from scripts.xai_face_clustering.features.pca_variance_plot import plot_pca_variance
 
 def main(args):
-    cache_path = "xai_face_clustering/features/embeddings.npz"
+    cache_path = "scripts/xai_face_clustering/features/embeddings.npz"
 
     if os.path.exists(cache_path):
         print("[INFO] Cached embeddings found, skipping image loading...")
@@ -30,7 +30,7 @@ def main(args):
     print("[INFO] Splitting train/test set...")
     X_train, X_test = train_test_split(embeddings, test_size=0.2, random_state=42)
 
-    plot_pca_variance(X_train, "xai_face_clustering/features/exploratory_plots/pca_explained_variance.png")
+    plot_pca_variance(X_train, "scripts/xai_face_clustering/features/exploratory_plots/pca_explained_variance.png")
 
     print("[INFO] Applying PCA...")
     X_train_pca = apply_pca(X_train, n_components=args.pca_components, fit=True)
@@ -52,7 +52,7 @@ if __name__ == "__main__":
     parser.add_argument("--model", type=str, default="facenet", help="Pretrained CNN model name")
     parser.add_argument("--pca_components", type=int, default=100, help="PCA component count")
     parser.add_argument("--cluster_method", type=str, default="kmeans", choices=["kmeans", "dbscan"], help="Clustering method")
-    parser.add_argument("--surrogate", type=str, default="logreg", choices=["logreg", "tree"], help="Surrogate classifier")
+    parser.add_argument("--surrogate", type=str, default="svm", choices=["logreg", "tree", "svm"], help="Surrogate classifier")
 
     args = parser.parse_args()
     main(args)
