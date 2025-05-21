@@ -10,8 +10,13 @@ class EmbeddingExtractor:
     def __init__(self, model_name="facenet", cache_path=None):
         self.cache_path = cache_path
         if model_name == "facenet":
-            # force CPU
-            self.model = InceptionResnetV1(pretrained='vggface2').eval().to('cpu')
+            # force CPU – avoids any GPU/CUDA binary mismatch
+            device = torch.device("cpu")
+            self.model = (
+                InceptionResnetV1(pretrained='vggface2')
+                .eval()
+                .to(device)
+            )
         else:
             raise ValueError(f"Unsupported model_name: {model_name}")
 

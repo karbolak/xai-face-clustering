@@ -33,7 +33,7 @@ PYTHONPATH=. pytest --cov=xai_face_clustering tests/
 │   └── test\_main.py
 └── xai-face-clustering
 ├── data
-│   ├── Human\_Faces\_Dataset
+│   ├── Human\_Faces\_ds
 │   └── **init**.py
 ├── features
 │   ├── exploratory\_plots

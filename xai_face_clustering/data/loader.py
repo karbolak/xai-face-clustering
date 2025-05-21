@@ -19,11 +19,11 @@ class ImageLoader:
         print(f"[LOADER] Scanning data directory: {data_dir}")
         images, labels, names = [], [], []
 
-        for label_name, label_id in [("Real_Images",0), ("AI-Generated_Images",1)]:
+        for label_name, label_id in [("real",0), ("fake",1)]:
             folder = os.path.join(data_dir, label_name)
             print(f"[LOADER] Processing folder: {folder} (label {label_id})")
             try:
-                files = [f for f in os.listdir(folder) if f.lower().endswith((".jpg",".png"))]
+                files = [f for f in os.listdir(folder) if f.lower().endswith((".jpg",".jpeg",".png"))]
             except Exception as e:
                 print(f"[LOADER]   ERROR listing {folder}: {e}")
                 continue
