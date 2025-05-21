@@ -5,14 +5,14 @@ from xai_face_clustering.pipeline import PipelineRunner
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data-dir",    default="xai_face_clustering/data/Human_Faces_Dataset")
+    parser.add_argument("--data-dir",    default="xai_face_clustering/data/Human_Faces_ds")
     parser.add_argument("--model",       default="facenet")
     parser.add_argument("--pca-cmp",     type=int,   default=100)
     parser.add_argument("--eps",         type=float, default=60.0)
     parser.add_argument("--min-s",       type=int,   default=5)
     parser.add_argument("--test-size",   type=float, default=0.2)
     parser.add_argument("--n-waterfalls",type=int,   default=5)
-    parser.add_argument("--cache",       default=None)
+    parser.add_argument("--cache",       default="artifacts/embeddings")
     parser.add_argument("--xai-out",     default="plots/shap_explanations")
     args = parser.parse_args()
 
