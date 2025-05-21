@@ -1,49 +1,13 @@
 # Our README
 
 ## Install current requirements with:
-1. **Via Conda**:
-
-- Create a new environment via:
-    
-```bash
-conda create -n {name_of_env}
-```
-        
-- Activate your new environment:
-```zsh
-conda activate {name_of_env}
-```
-        
-- Add conda-forge to your environment's channels, such that packages(e.g: mahotas) are available:
-    
-```zsh
-conda config --add channels conda-forge
-```
-        
-- Install requirements through:
-    
 ```zsh
 conda install --yes --file requirements.txt
-```
-
-
-    
-2. **Via pip**, update **requirements.txt** commands(*opencv -> opencv-python*, *pytorch -> torch*) and run in terminal:
-```zsh
-pip install -r requirements.txt
 ```
 
 ## Test with:
 ```zsh
 PYTHONPATH=. pytest --cov=xai_face_clustering tests/  
-```
-
-## Add embedding files with git lfs (for future reference):
-```zsh
-git lfs install # I've done all of that already
-git lfs track "*.npz"
-git add .gitattributes
-git add xai_face_clustering/features/embeddings.npz 
 ```
 
 ## Project setup
@@ -67,7 +31,7 @@ git add xai_face_clustering/features/embeddings.npz
 │   ├── models
 │   │   └── **init**.py
 │   └── test\_main.py
-└── xai_face_clustering
+└── xai-face-clustering
 ├── data
 │   ├── Human\_Faces\_Dataset
 │   └── **init**.py
@@ -80,7 +44,7 @@ git add xai_face_clustering/features/embeddings.npz
 └── **init**.py
 ```
 
-• **_main.py_**
+• main.py
 
     Role: The orchestrator of the pipeline.
 
@@ -98,7 +62,7 @@ git add xai_face_clustering/features/embeddings.npz
 
     Structure: Use argparse to control mode (e.g., --visualize, --cluster, --explain).
 
-• **xai_face_clustering/data/**
+• xai-face-clustering/data/
 
     Purpose:
 
@@ -112,7 +76,7 @@ git add xai_face_clustering/features/embeddings.npz
 
         Optionally cache resized versions
 
-• **xai_face_clustering/features/_exploratory_plots.py_**
+• xai-face-clustering/features/exploratory_plots.py
 
     Purpose:
 
@@ -128,7 +92,7 @@ git add xai_face_clustering/features/embeddings.npz
 
     Can be imported by main.py when --visualize is passed
 
-• **xai_face_clustering/features/**
+• xai-face-clustering/features/
 
     General feature logic:
 
@@ -138,7 +102,7 @@ git add xai_face_clustering/features/embeddings.npz
 
         scaler.py (optional) → apply and persist StandardScaler.
 
-• **xai_face_clustering/models/**
+• xai-face-clustering/models/
 
     Purpose:
 
@@ -161,13 +125,8 @@ git add xai_face_clustering/features/embeddings.npz
         xai.py
 
             run_shap_explanation() and/or run_lime_explanation()
-• **xai_face_clustering/features/_pca.py_**
-    This is a heavy file, takes a lot of RAM and time to run, hence, to achieve a smoother flow, the implementation checks for caches.
-    Procedure:
-        The file will be run only once, on its first attempt. 
-        In future attempts, the newly ran main will access a saved path, path which stores cached features.
 
-• **tests/**
+• tests/
 
     Contains:
 
@@ -310,4 +269,3 @@ Your repository should look something like this:
 
 **Good luck and happy coding! 🚀**
 -->
-
