@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-from sklearn.cluster import KMeans, DBSCAN
+from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score, adjusted_rand_score
+from xai_face_clustering.features.dbscan import apply_dbscan
 
 class ClusteringStrategy(ABC):
     @abstractmethod
@@ -33,7 +34,8 @@ class DBSCANCluster(ClusteringStrategy):
         self.min_samples = min_samples
 
     def fit_predict(self, X):
-        self.model = DBSCAN(eps=self.eps, min_samples=self.min_samples).fit(X)
+        print("DBSCAN CLUSTER fit_predict")
+        self.model = apply_dbscan(X, eps=self.eps, min_samples=self.min_samples)
         self.labels = self.model.labels_
         return self.labels
 

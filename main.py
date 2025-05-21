@@ -1,7 +1,13 @@
 #!/usr/bin/env python
+import os
+import torch
 import argparse
 from types import SimpleNamespace
 from xai_face_clustering.pipeline import PipelineRunner
+
+os.environ["OMP_NUM_THREADS"] = str(os.cpu_count())
+os.environ["MKL_NUM_THREADS"] = str(os.cpu_count())
+torch.set_num_threads(os.cpu_count())
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -12,8 +18,9 @@ if __name__ == "__main__":
     parser.add_argument("--min-s",       type=int,   default=5)
     parser.add_argument("--test-size",   type=float, default=0.2)
     parser.add_argument("--n-waterfalls",type=int,   default=5)
-    parser.add_argument("--cache",       default="artifacts/embeddings")
+    parser.add_argument("--cache",       default="artifacts/embeddings/embeddings.pkl")
     parser.add_argument("--xai-out",     default="plots/shap_explanations")
+    parser.add_argument("--batch-size",  type=int, default=512)
     args = parser.parse_args()
 
     cfg = SimpleNamespace(
@@ -24,7 +31,7 @@ if __name__ == "__main__":
         STD              = [0.229,0.224,0.225],
         CACHE            = args.cache,
         PCA_COMPONENTS   = args.pca_cmp,
-        PCA_SAVE         = None,
+        PCA_SAVE         = "artifacts/models/pca_model.pkl",
         CLUSTER_METHOD   = "dbscan",
         EPS              = args.eps,
         MIN_SAMPLES      = args.min_s,
@@ -32,7 +39,8 @@ if __name__ == "__main__":
         SURROGATE        = "svm",
         TEST_SIZE        = args.test_size,
         N_WATERFALLS     = args.n_waterfalls,
-        XAI_OUT          = args.xai_out
+        XAI_OUT          = args.xai_out,
+        BATCH_SIZE       = args.batch_size
     )
 
     runner = PipelineRunner(cfg)

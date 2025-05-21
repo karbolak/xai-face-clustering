@@ -27,3 +27,7 @@ pytest-cov
 tqdm
 joblib
 streamlit
+
+# We're using large file system therefore in order to push huge files we need to install the mehtod that allows for it
+#NOTE: brew install git-lfs
+#NOTE: git lfs install
