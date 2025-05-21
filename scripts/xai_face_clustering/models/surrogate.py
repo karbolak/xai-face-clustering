@@ -3,6 +3,10 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import SVC
 from sklearn.metrics import classification_report
 
+import os, joblib
+
+SURROGATE_SAVE_PATH = "scripts/xai_face_clustering/models/surrogate_model.joblib"
+
 def train_surrogate_model(X_train, y_train, X_test, y_test, method="logreg"):
     """
     Train a simple surrogate classifier to mimic clustering decisions.
@@ -39,5 +43,8 @@ def train_surrogate_model(X_train, y_train, X_test, y_test, method="logreg"):
 
     print("[INFO] Surrogate model test performance:")
     print(classification_report(y_test, y_pred, zero_division=0))
+    
+    joblib.dump(model, SURROGATE_SAVE_PATH)
+    print(f"[INFO] Saved surrogate model to {SURROGATE_SAVE_PATH}")
 
     return model

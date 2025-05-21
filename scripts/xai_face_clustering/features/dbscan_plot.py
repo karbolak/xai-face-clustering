@@ -1,36 +1,45 @@
+# scripts/xai_face_clustering/features/dbscan_plot.py
+
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import NearestNeighbors
 
-def plot_dbscan_clusters(embeddings: np.ndarray, output_path: str, eps=0.5, min_samples=5):
-    """Generate and save DBSCAN clustering plot."""
-    # Standardize features
+def plot_dbscan_kdistance(
+    embeddings: np.ndarray,
+    output_path: str,
+    k: int = 5
+):
+    """
+    Generate and save the k-distance plot for DBSCAN epsilon selection.
+
+    Args:
+        embeddings (np.ndarray): raw feature matrix (N, D).
+        output_path (str): where to save the plot.
+        k (int): which neighbor distance to plot (default=5).
+    """
+    # Standardize
     scaler = StandardScaler()
-    scaled = scaler.fit_transform(embeddings)
+    X = scaler.fit_transform(embeddings)
 
-    # Fit DBSCAN
-    dbscan = DBSCAN(eps=eps, min_samples=min_samples)
-    labels = dbscan.fit_predict(scaled)
+    # Compute k-th neighbor distances
+    nbrs = NearestNeighbors(n_neighbors=k)
+    nbrs.fit(X)
+    distances, _ = nbrs.kneighbors(X)
+    k_distances = np.sort(distances[:, k - 1])
 
-    # Plot clusters
-    plt.figure(figsize=(10, 6))
-    unique_labels = set(labels)
-    for label in unique_labels:
-        label_mask = (labels == label)
-        color = 'k' if label == -1 else plt.cm.nipy_spectral(float(label) / len(unique_labels))
-        plt.scatter(scaled[label_mask, 0], scaled[label_mask, 1], c=[color], label=f'Cluster {label}')
-
-    plt.xlabel('Feature 1')
-    plt.ylabel('Feature 2')
-    plt.title('DBSCAN Clustering')
-    plt.legend()
+    # Plot
+    plt.figure(figsize=(8, 5))
+    plt.plot(k_distances)
+    plt.xlabel(f'Points sorted by distance to {k}th NN')
+    plt.ylabel(f'{k}th NN distance')
+    plt.title(f'k-Distance Graph (k={k})')
     plt.grid(True)
     plt.tight_layout()
 
     # Save
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     plt.savefig(output_path)
-    print(f"[INFO] Saved DBSCAN clustering plot to {output_path}")
-
+    plt.close()
+    print(f"[INFO] Saved k-distance plot to {output_path}")
