@@ -137,7 +137,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--data_dir",
         type=str,
-        default="scripts/xai_face_clustering/data/Human_Faces_ds",
+        default="scripts/xai_face_clustering/data/Human_Faces_Dataset",
         help="Path to your face dataset"
     )
     parser.add_argument(

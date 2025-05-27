@@ -7,8 +7,7 @@ def cluster_embeddings(
     method="kmeans",
     evaluate_stability=False,
     true_labels=None,
-    **kwargs
-):
+    **kwargs):
     """
     Cluster embeddings with KMeans or DBSCAN and report metrics.
 
@@ -32,7 +31,7 @@ def cluster_embeddings(
         min_samples = kwargs.get("min_samples", 5)
         model = DBSCAN(eps=eps, min_samples=min_samples)
     else:
-        raise ValueError(f"Unsupported clustering method: {method}")
+        raise ValueError(f"Unknown clustering method: {method}")
 
     # Fit and predict cluster labels
     labels = model.fit_predict(embeddings)

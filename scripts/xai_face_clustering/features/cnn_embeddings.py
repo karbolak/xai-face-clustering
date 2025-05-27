@@ -9,6 +9,7 @@ import torch.nn as nn
 import numpy as np
 from tqdm import tqdm
 from facenet_pytorch import InceptionResnetV1
+from torchvision import transforms
 
 def get_model(model_name="facenet"):
     if model_name == "facenet":
@@ -19,47 +20,49 @@ def get_model(model_name="facenet"):
 
     return model, layers_to_hook
 
-def extract_embeddings(images, filenames=None, labels=None, model_name="facenet", cache_path="scripts/xai_face_clustering/features/embeddings.npz"):
-    if os.path.exists(cache_path):
-        print(f"[INFO] Loading cached embeddings from {cache_path}")
-        data = np.load(cache_path, allow_pickle=True)
-        return data["embeddings"], data["filenames"], data["labels"]
+# same preprocessing as in streamlit app
+IMAGE_SIZE = (224, 224)
+IMAGENET_MEAN = [0.485, 0.456, 0.406]
+IMAGENET_STD = [0.229, 0.224, 0.225]
 
-    model, layers_to_hook = get_model(model_name)
+def extract_embeddings(images, filenames, labels, model_name, cache_path):
+    """
+    images: list of np.ndarray in RGB format
+    returns: embeddings as (N, 512), plus filenames and labels unchanged
+    """
+    # 1) load model
+    model = InceptionResnetV1(pretrained="vggface2").eval()
+
+    # 2) preprocessing pipeline
+    tf = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Resize(IMAGE_SIZE),
+        transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
+    ])
+
+    # 3) hook setup
     activations = {}
-
-    def get_hook(name):
-        def hook(module, input, output):
-            activations[name] = output.detach()
-        return hook
-
+    def get_hook(_, __, out):
+        activations["feat"] = out.detach()
+    # register it on the last_linear layer
     for name, module in model.named_modules():
-        if name in layers_to_hook:
-            module.register_forward_hook(get_hook(name))
+        if name == "last_linear":
+            module.register_forward_hook(get_hook)
+            break
 
-    all_features = []
+    # 4) iterate images
+    embs = []
+    for img in images:
+        if isinstance(img, torch.Tensor):
+            x = img.unsqueeze(0)
+        else:
+            x = tf(img).unsqueeze(0)
+        with torch.no_grad():
+            _ = model(x)
+        feat = activations["feat"]
+        embs.append(feat.mean(dim=[2,3]).cpu().numpy().squeeze())
+    embs = np.vstack(embs)  # (N,512)
 
-    with torch.no_grad():
-        print("[INFO] Forwarding images through model...")
-        for i in tqdm(range(0, len(images), 64)):
-            batch = images[i:i+64]
-            _ = model(batch)
-
-            batch_feats = []
-            for name in layers_to_hook:
-                act = activations[name]
-                if act.ndim == 4:
-                    act = torch.mean(act, dim=[2, 3])
-                batch_feats.append(act)
-            feats = torch.cat(batch_feats, dim=1)
-            all_features.append(feats.cpu())
-
-    embeddings = torch.cat(all_features, dim=0).numpy()
-
-    np.savez(cache_path,
-             embeddings=embeddings,
-             filenames=np.array(filenames) if filenames is not None else np.arange(len(embeddings)),
-             labels=np.array(labels) if labels is not None else np.zeros(len(embeddings)))
-    print(f"[INFO] Saved embeddings to {cache_path}")
-
-    return embeddings, filenames, labels
+    # optional: cache to disk
+    np.savez(cache_path, embeddings=embs, filenames=filenames, labels=labels)
+    return embs, filenames, labels
