@@ -7,7 +7,7 @@ import joblib
 PCA_SAVE_PATH = "scripts/xai_face_clustering/models/pca_model.joblib"
 SCALER_SAVE_PATH = "scripts/xai_face_clustering/models/scaler.joblib"
 
-def apply_pca(features, n_components=100, fit=True, save=True):
+def apply_pca(features, n_components=50, fit=True, save=True):
     """
         Fit and apply PCA
         Optionally save and load PCA models using joblib

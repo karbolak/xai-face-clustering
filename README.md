@@ -1,5 +1,12 @@
 # Our README
 
+python -m uvicorn scripts.xai_face_clustering.api.inference_api:app --reload
+
+curl -X POST "http://127.0.0.1:8000/predict" -F "file=@/home/karbolak/Documents/Uni/AppliedML/AppliedML_project/scripts/xai_face_clustering/data/Human_Faces_ds/fake/FLUX1_dev_image_0000015.jpg"
+
+
+
+
 ## Install current requirements with:
 1. **Via Conda**:
 

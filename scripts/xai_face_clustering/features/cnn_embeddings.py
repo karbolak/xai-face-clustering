@@ -27,9 +27,15 @@ IMAGENET_STD = [0.229, 0.224, 0.225]
 
 def extract_embeddings(images, filenames, labels, model_name, cache_path):
     """
-    images: list of np.ndarray in RGB format
+    images: list of np.ndarray in RGB format or a torch.Tensor of shape (N, 3, 224, 224)
     returns: embeddings as (N, 512), plus filenames and labels unchanged
     """
+    # Convert tensor batch to list of numpy arrays if needed
+    if isinstance(images, torch.Tensor):
+        images = [np.transpose(img.numpy(), (1, 2, 0)) for img in images]
+
+    print(f"[INFO] Extracting embeddings for {len(images)} images...")
+
     # 1) load model
     model = InceptionResnetV1(pretrained="vggface2").eval()
 
@@ -44,15 +50,14 @@ def extract_embeddings(images, filenames, labels, model_name, cache_path):
     activations = {}
     def get_hook(_, __, out):
         activations["feat"] = out.detach()
-    # register it on the last_linear layer
     for name, module in model.named_modules():
         if name == "last_linear":
             module.register_forward_hook(get_hook)
             break
 
-    # 4) iterate images
+    # 4) iterate images with progress bar
     embs = []
-    for img in images:
+    for idx, img in enumerate(tqdm(images, desc="[INFO] Embedding images")):
         if isinstance(img, torch.Tensor):
             x = img.unsqueeze(0)
         else:
@@ -60,9 +65,12 @@ def extract_embeddings(images, filenames, labels, model_name, cache_path):
         with torch.no_grad():
             _ = model(x)
         feat = activations["feat"]
-        embs.append(feat.mean(dim=[2,3]).cpu().numpy().squeeze())
+        embs.append(feat.cpu().numpy().squeeze())
+        if (idx + 1) % 500 == 0:
+            print(f"[INFO] Processed {idx + 1}/{len(images)} images...")
+
     embs = np.vstack(embs)  # (N,512)
 
-    # optional: cache to disk
+    print(f"[INFO] Finished embedding extraction. Saving to cache: {cache_path}")
     np.savez(cache_path, embeddings=embs, filenames=filenames, labels=labels)
     return embs, filenames, labels

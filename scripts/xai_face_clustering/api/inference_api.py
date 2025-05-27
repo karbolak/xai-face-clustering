@@ -12,7 +12,7 @@ app = FastAPI()
 
 # Load models at startup
 SURROGATE_MODEL_PATH = "scripts/xai_face_clustering/models/surrogate_model.joblib"
-PCA_PATH = "scripts/xai_face_clustering/features/pca_model.joblib"
+PCA_PATH = "scripts/xai_face_clustering/models/pca_model.joblib"
 
 surrogate = joblib.load(SURROGATE_MODEL_PATH)
 pca = joblib.load(PCA_PATH)

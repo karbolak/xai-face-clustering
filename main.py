@@ -35,7 +35,8 @@ def main(args):
         labels     = data["labels"].tolist()
     else:
         print(f"[INFO] Loading images from {args.data_dir}…")
-        images, labels, _ = load_images(args.data_dir)
+        images, labels, _ = load_images(args.data_dir, as_numpy_list=True)
+        print(f"[INFO] Loaded {len(images)} images. Starting embedding extraction...")
         embeddings, _, labels = extract_embeddings(
             images,
             filenames=None,
@@ -43,6 +44,7 @@ def main(args):
             model_name=args.model,
             cache_path=EMBED_CACHE
         )
+        print(f"[INFO] Embedding extraction complete.")
 
     # ── 2) Train/test split ────────────────────────────────────────────────
     print("[INFO] Splitting train/test set…")
@@ -149,13 +151,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--pca_components",
         type=int,
-        default=2000,
+        default=50,
         help="Number of PCA components to retain"
     )
     parser.add_argument(
         "--cluster_method",
         type=str,
-        default="dbscan",
+        default="kmeans",
         choices=["kmeans", "dbscan"],
         help="Clustering algorithm to use"
     )
