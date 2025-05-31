@@ -106,6 +106,12 @@ def main(args):
         eps=args.dbscan_eps,
         min_samples=args.dbscan_min_samples
     )
+    
+    np.savez("scripts/xai_face_clustering/features/test_clusters.npz",
+         y_test_cluster=y_test_cluster,
+         y_test_orig=y_test_orig)
+    print("[INFO] Clustering complete.")
+
 
     # ── 6) Train surrogate classifier ──────────────────────────────────────
     print(f"[INFO] Training surrogate ({args.surrogate})…")
