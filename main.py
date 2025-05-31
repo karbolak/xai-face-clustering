@@ -151,14 +151,14 @@ if __name__ == "__main__":
     parser.add_argument(
         "--pca_components",
         type=int,
-        default=50,
+        default=475, # 95%
         help="Number of PCA components to retain"
     )
     parser.add_argument(
         "--cluster_method",
         type=str,
-        default="kmeans",
-        choices=["kmeans", "dbscan"],
+        default="gmm",
+        choices=["kmeans", "dbscan", "gmm"],   # add "gmm"
         help="Clustering algorithm to use"
     )
     parser.add_argument(

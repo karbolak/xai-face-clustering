@@ -1,5 +1,6 @@
 from sklearn.cluster import KMeans, DBSCAN
 from sklearn.metrics import silhouette_score, adjusted_rand_score
+from sklearn.mixture import GaussianMixture
 import numpy as np
 
 def cluster_embeddings(
@@ -30,6 +31,15 @@ def cluster_embeddings(
         eps = kwargs.get("eps", 0.5)
         min_samples = kwargs.get("min_samples", 5)
         model = DBSCAN(eps=eps, min_samples=min_samples)
+    elif method == "gmm":
+        n_clusters = kwargs.get("n_clusters", 2)
+        model = GaussianMixture(n_components=n_clusters, random_state=42)
+        labels = model.fit_predict(embeddings)
+        sil = silhouette_score(embeddings, labels)
+        print(f"[INFO] Silhouette Score: {sil:.3f}")
+        if true_labels is not None:
+            ari = adjusted_rand_score(true_labels, labels)
+            print(f"[INFO] Adjusted Rand Index vs ground truth: {ari:.3f}")
     else:
         raise ValueError(f"Unknown clustering method: {method}")
 
