@@ -88,6 +88,12 @@ async def predict(file: UploadFile = File(...)):
         proba = clf.predict_proba(emb_pca)[0].tolist()
     else:
         proba = None
+        
+    print("API: classes_:", clf.classes_)
+    print("API: Scaler mean:", scaler.mean_[:5])
+    print("API: PCA mean:", pca.mean_[:5])
+    print("API: emb_pca[0]:", emb_pca[0][:5])
+    print("API: proba:", clf.predict_proba(emb_pca)[0])
 
     debug_info = {
         "predicted_label_num": pred_label_num,

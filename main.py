@@ -97,6 +97,12 @@ def main(args):
     print(classification_report(y_test, y_pred_svm, target_names=['Real', 'AI']))
     joblib.dump(svm, SVM_MODEL_PATH)
     print(f"[INFO] Saved SVM model to {SVM_MODEL_PATH}")
+    
+    print("classes_:", svm.classes_)
+    print("Scaler mean:", scaler.mean_[:5])
+    print("PCA mean:", pca.mean_[:5])
+    print("First test emb_pca:", X_test_pca[0][:5])
+    print("Pred proba on first test:", svm.predict_proba(X_test_pca[:1]))
 
     # --- SHAP explanation for SVM --- shap.force_plot or shap.bar_plot for other vis styles
     print("[INFO] Fitting SHAP explainer for SVM...")
