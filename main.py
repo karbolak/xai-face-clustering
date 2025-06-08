@@ -4,6 +4,9 @@ import json
 import joblib
 import numpy as np
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.cluster import SpectralClustering
+from sklearn.linear_model import LogisticRegression
 
 from scripts.xai_face_clustering.data.loader import load_images
 from scripts.xai_face_clustering.features.cnn_embeddings import extract_embeddings
@@ -133,6 +136,74 @@ def main(args):
     with open(CLUSTER_MAP_PATH, "w") as f:
         json.dump(cluster_map, f)
     print(f"[INFO] Saved cluster→label map to {CLUSTER_MAP_PATH}")
+    
+    # 1. Surrogate classifier predictions (on test set)
+    y_test_pred_clusters = surrogate.predict(X_test_pca)
+
+    # 2. Map clusters to real/fake using the cluster_map
+    y_test_pred_final = [cluster_map.get(int(c), -1) for c in y_test_pred_clusters]
+
+    # 3. Report metrics
+    print("\n=== FINAL ASSIGNMENT METRICS: End-to-end model ===")
+    print("Confusion Matrix:")
+    print(confusion_matrix(y_test_orig, y_test_pred_final))
+    print("Classification Report:")
+    print(classification_report(y_test_orig, y_test_pred_final, target_names=["Real", "AI"]))
+
+    # Optionally, print the number of unmapped clusters (should be zero in normal cases)
+    if -1 in y_test_pred_final:
+        unmapped = sum([1 for x in y_test_pred_final if x == -1])
+        print(f"Warning: {unmapped} test samples could not be mapped to any real/fake class.")
+
+    # === BASELINE: Spectral Clustering + Logistic Regression ===
+    print("\n=== BASELINE: Spectral Clustering + Logistic Regression ===")
+
+    # 1. Spectral Clustering on train/test
+    n_clusters = len(np.unique(y_train_orig))
+    spectral = SpectralClustering(n_clusters=n_clusters, affinity='nearest_neighbors', random_state=42, n_neighbors=10)
+    y_train_spectral = spectral.fit_predict(X_train_pca)
+    # SpectralClustering has no .predict, so we'll assign clusters for test points using nearest cluster centroid
+    cluster_centers = []
+    for cid in range(n_clusters):
+        pts = X_train_pca[y_train_spectral == cid]
+        if len(pts) > 0:
+            cluster_centers.append(np.mean(pts, axis=0))
+        else:
+            # Handle empty clusters robustly
+            cluster_centers.append(np.zeros(X_train_pca.shape[1]))
+
+    # For each test point, assign to closest spectral cluster
+    from scipy.spatial.distance import cdist
+    dists = cdist(X_test_pca, np.vstack(cluster_centers))
+    y_test_spectral = np.argmin(dists, axis=1)
+
+    # 2. Map clusters to true labels (as with GMM baseline)
+    spectral_cluster_map = {}
+    for cid in np.unique(y_train_spectral):
+        idxs = np.where(y_train_spectral == cid)[0]
+        orig = [y_train_orig[i] for i in idxs]
+        if orig:
+            spectral_cluster_map[int(cid)] = int(np.bincount(orig).argmax())
+        else:
+            spectral_cluster_map[int(cid)] = -1
+
+    # 3. Train surrogate classifier (logreg)
+    baseline_logreg = LogisticRegression(max_iter=1000)
+    baseline_logreg.fit(X_train_pca, y_train_spectral)
+    y_test_pred_spectral = baseline_logreg.predict(X_test_pca)
+    y_test_pred_final_spectral = [spectral_cluster_map.get(int(c), -1) for c in y_test_pred_spectral]
+
+    # 4. Report baseline metrics
+    print("\nConfusion Matrix:")
+    print(confusion_matrix(y_test_orig, y_test_pred_final_spectral))
+    print("Classification Report:")
+    print(classification_report(y_test_orig, y_test_pred_final_spectral, target_names=["Real", "AI"]))
+
+    # Optionally, print the number of unmapped clusters (should be zero in normal cases)
+    if -1 in y_test_pred_final_spectral:
+        unmapped = sum([1 for x in y_test_pred_final_spectral if x == -1])
+        print(f"Warning: {unmapped} test samples could not be mapped to any real/fake class.")
+
 
     # ── 8) Optional SHAP explanations ───────────────────────────────────────
     if args.shap:
@@ -164,7 +235,7 @@ if __name__ == "__main__":
         "--cluster_method",
         type=str,
         default="gmm",
-        choices=["kmeans", "dbscan", "gmm"],   # add "gmm"
+        choices=["kmeans", "dbscan", "gmm"],
         help="Clustering algorithm to use"
     )
     parser.add_argument(

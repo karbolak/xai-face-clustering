@@ -34,7 +34,7 @@ def train_surrogate_model(X_train, y_train, X_test, y_test, method="logreg"):
     elif method == "tree":
         model = DecisionTreeClassifier(max_depth=3)
     elif method == "svm":
-        model = SVC(kernel="rbf", probability=True)  # kernel can be 'linear', 'poly', 'rbf', 'sigmoid'
+        model = SVC(kernel="sigmoid", probability=True)  # kernel can be 'linear', 'poly', 'rbf', 'sigmoid'
     else:
         raise ValueError(f"Unsupported surrogate model: {method}")
 
