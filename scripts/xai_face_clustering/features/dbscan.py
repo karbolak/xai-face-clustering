@@ -12,7 +12,7 @@ def apply_dbscan(features, eps=0.5, min_samples=5, fit=True, save=True):
     Fit and apply DBSCAN clustering
     Optionally save and load DBSCAN models using joblib
     
-    Standardizes the data before clustering (essential!)
+    Standardizes the data before clustering
     Saves dbscan_model.joblib and scaler.joblib for consistent transformations later
     We can later load and apply DBSCAN using fit=False   
     """

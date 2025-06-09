@@ -6,15 +6,14 @@ from sklearn.preprocessing import StandardScaler
 
 def plot_pca_variance(embeddings: np.ndarray, output_path: str):
     """Generate and save PCA explained variance plot."""
-    # Standardize features
+    #standardize 
     scaler = StandardScaler()
     scaled = scaler.fit_transform(embeddings)
 
-    # Fit PCA
+    #fit PCA
     pca = PCA()
     pca.fit(scaled)
 
-    # Plot cumulative explained variance
     plt.figure(figsize=(10, 6))
     plt.plot(np.cumsum(pca.explained_variance_ratio_), marker='o')
     plt.xlabel('Number of Components')
@@ -23,7 +22,6 @@ def plot_pca_variance(embeddings: np.ndarray, output_path: str):
     plt.grid(True)
     plt.tight_layout()
 
-    # Save
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     plt.savefig(output_path)
     print(f"[INFO] Saved PCA explained variance plot to {output_path}")

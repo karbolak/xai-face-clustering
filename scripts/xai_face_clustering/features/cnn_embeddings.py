@@ -36,17 +36,17 @@ def extract_embeddings(images, filenames, labels, model_name, cache_path):
 
     print(f"[INFO] Extracting embeddings for {len(images)} images...")
 
-    # 1) load model
+    #load model
     model = InceptionResnetV1(pretrained="vggface2").eval()
 
-    # 2) preprocessing pipeline
+    #preprocessing pipeline
     tf = transforms.Compose([
         transforms.ToTensor(),
         transforms.Resize(IMAGE_SIZE),
         transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
     ])
 
-    # 3) hook setup
+    #hook setup
     activations = {}
     def get_hook(_, __, out):
         activations["feat"] = out.detach()
@@ -55,7 +55,7 @@ def extract_embeddings(images, filenames, labels, model_name, cache_path):
             module.register_forward_hook(get_hook)
             break
 
-    # 4) iterate images with progress bar
+    #iterate images with progress bar
     embs = []
     for idx, img in enumerate(tqdm(images, desc="[INFO] Embedding images")):
         if isinstance(img, torch.Tensor):

@@ -62,33 +62,26 @@ async def predict(
     debug: str = Query("false", description="Return debug info for this image"),
     file: UploadFile = File(...),
 ):
-    # Parse query params as booleans
     debug = str(debug).strip().lower() in ("true", "1", "yes")
     
-    # Step 1: Read and preprocess
     image = Image.open(io.BytesIO(await file.read())).convert("RGB")
     emb = get_embedding(image)
 
-    # Step 2: PCA transform
     emb_pca = pca.transform([emb])
 
-    # Step 3: Predict cluster using surrogate
     pred_cluster = surrogate.predict(emb_pca)[0]
 
-    # Step 4: SVM confidence/probability
     if hasattr(surrogate, "predict_proba"):
         proba = surrogate.predict_proba(emb_pca)[0]
     else:
         proba = None
 
-    # Step 5: Cluster→label mapping
     if cluster_map is not None:
         mapped_label_num = cluster_map.get(str(pred_cluster), "Unknown")
         mapped_label = "AI" if mapped_label_num == 1 else "Real" if mapped_label_num == 0 else "Unknown"
     else:
         mapped_label = "AI" if pred_cluster == 1 else "Real"
 
-    # Step 6: Debug output (optional)
     response = {
         "prediction": mapped_label,
     }
@@ -119,7 +112,6 @@ async def shap_image(
         explainer = shap.KernelExplainer(surrogate.predict_proba, background)
         shap_vals = explainer.shap_values(emb_pca)
         fig = plt.figure()
-        # You can adjust this for multiclass; this assumes binary
         shap.plots.waterfall(shap_vals[0], show=False)
         buf = BytesIO()
         plt.savefig(buf, format='png')

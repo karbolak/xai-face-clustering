@@ -1,5 +1,4 @@
 import shap
-import numpy as np
 import matplotlib.pyplot as plt
 import os
 
@@ -8,16 +7,13 @@ os.makedirs(EXPLAIN_DIR, exist_ok=True)
 
 def run_shap_explanation(model, X, y=None, num_examples=5):
     print("[INFO] Explaining surrogate model using SHAP...")
-
-    # Summarize background using KMeans
     print("[INFO] Summarizing background using k-means...")
     background = shap.kmeans(X, 100)
 
-    # Use KernelExplainer for SVM, logistic regression, etc.
+    #kernel explainer for svm, logistic regression and alike
     explainer = shap.KernelExplainer(model.predict_proba, background)
-    shap_values = explainer.shap_values(X, nsamples=100)  # Limit samples for speed
+    shap_values = explainer.shap_values(X, nsamples=100)
 
-    # Summary plot (global)
     for i, class_vals in enumerate(shap_values):
         plt.figure()
         shap.summary_plot(class_vals, X, show=False)
@@ -25,7 +21,7 @@ def run_shap_explanation(model, X, y=None, num_examples=5):
         plt.savefig(os.path.join(EXPLAIN_DIR, f"shap_summary_class_{i}.png"))
         plt.close()
 
-    # Waterfall plots
+    #waterfall plots
     for i in range(min(num_examples, len(X))):
         try:
             plt.figure()

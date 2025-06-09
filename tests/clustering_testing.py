@@ -7,7 +7,6 @@ from sklearn.metrics import adjusted_rand_score, silhouette_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.manifold import TSNE
 
-# Optional
 try:
     import hdbscan
 except ImportError:
@@ -20,32 +19,28 @@ except ImportError:
 import warnings
 warnings.filterwarnings('ignore')
 
-# Load data
+#load data
 DATA_PATH = "scripts/xai_face_clustering/features/embeddings.npz"
 data = np.load(DATA_PATH, allow_pickle=True)
 X = data['embeddings']
 y_true = np.array(data['labels'])  # 0=Real, 1=AI
 
-# Standardize
+#standardize
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
-# 1. PCA
 pca = PCA(n_components=2)
 X_pca = pca.fit_transform(X_scaled)
 
-# 2. t-SNE (subsample for speed if huge data)
 print("[INFO] Running t-SNE for visualization (may be slow)...")
 X_tsne = TSNE(n_components=2, perplexity=30, learning_rate=200, n_iter=1000, random_state=42).fit_transform(X_scaled)
 
-# 3. UMAP (if available)
 if umap:
     print("[INFO] Running UMAP for visualization...")
     X_umap = umap.UMAP(n_components=2, random_state=42).fit_transform(X_scaled)
 else:
     X_umap = None
 
-# Plot function for ground-truth
 def plot_ground_truth(X_emb, emb_name):
     plt.figure(figsize=(7,6))
     for gt, marker, label in zip([0,1], ['o', 's'], ['Real', 'AI']):
@@ -58,7 +53,6 @@ def plot_ground_truth(X_emb, emb_name):
     plt.tight_layout()
     plt.show()
 
-# Plot immediately after fitting!
 print("[INFO] Plotting PCA ground truth...")
 plot_ground_truth(X_pca, "PCA")
 print("[INFO] Plotting t-SNE ground truth...")
@@ -67,7 +61,6 @@ if X_umap is not None:
     print("[INFO] Plotting UMAP ground truth...")
     plot_ground_truth(X_umap, "UMAP")
 
-# ---- CLUSTERING ----
 def grid_search(estimator, param_grid, X, y_true, mask=None, ari_goal='max', return_model=False):
     from itertools import product
     best_ari = -1
@@ -100,7 +93,6 @@ def grid_search(estimator, param_grid, X, y_true, mask=None, ari_goal='max', ret
 
 results = []
 
-# KMeans, MiniBatchKMeans, Birch: try 2-6 clusters
 for name, Cls in [("KMeans", KMeans), ("MiniBatchKMeans", MiniBatchKMeans), ("Birch", Birch)]:
     pred, ari, params, _ = grid_search(
         Cls, {'n_clusters': [2, 3, 4, 5, 6]}, X_scaled, y_true
@@ -109,7 +101,6 @@ for name, Cls in [("KMeans", KMeans), ("MiniBatchKMeans", MiniBatchKMeans), ("Bi
     print(f"{name}: ARI={ari:.2f} (params={params})")
     results.append((name, pred, ari, sil, params))
 
-# Agglomerative
 pred, ari, params, _ = grid_search(
     AgglomerativeClustering, {'n_clusters': [2, 3, 4, 5, 6]}, X_scaled, y_true
 )
@@ -117,7 +108,6 @@ sil = silhouette_score(X_scaled, pred) if len(set(pred)) > 1 else np.nan
 print(f"Agglomerative: ARI={ari:.2f} (params={params})")
 results.append(("Agglomerative", pred, ari, sil, params))
 
-# GMM (Gaussian Mixture)
 def fit_predict_gmm(n_components):
     gmm = GaussianMixture(n_components=n_components, random_state=42)
     return gmm.fit(X_scaled).predict(X_scaled)
@@ -135,7 +125,6 @@ sil = silhouette_score(X_scaled, best_pred) if len(set(best_pred)) > 1 else np.n
 print(f"GMM: ARI={best_ari:.2f} (n_components={best_n})")
 results.append(("GMM", best_pred, best_ari, sil, {'n_components': best_n}))
 
-# DBSCAN, OPTICS, HDBSCAN parameter grid
 for name, Cls, param_grid in [
     ("DBSCAN", DBSCAN, {'eps': np.linspace(0.5, 3.0, 8), 'min_samples': [3, 5, 10]}),
     ("OPTICS", OPTICS, {'min_samples': [3, 5, 10], 'xi':[0.05,0.1], 'min_cluster_size':[0.05,0.1,0.2]}),
@@ -146,7 +135,6 @@ for name, Cls, param_grid in [
     print(f"{name}: ARI={ari:.2f} (params={params})")
     results.append((name, pred, ari, sil, params))
 
-# HDBSCAN
 if hdbscan:
     print("[INFO] Running HDBSCAN parameter sweep...")
     best_ari = -1
@@ -166,13 +154,11 @@ if hdbscan:
     print(f"HDBSCAN: ARI={best_ari:.2f} (params={best_params})")
     results.append(("HDBSCAN", best_pred, best_ari, sil, best_params))
 
-# ---- LEADERBOARD ----
 print("\n=== Clustering Leaderboard (by ARI) ===")
 results_sorted = sorted(results, key=lambda x: x[2], reverse=True)
 for name, _, ari, sil, params in results_sorted:
     print(f"{name}: ARI={ari:.3f}, Silhouette={sil:.3f}, params={params}")
 
-# ---- VISUALIZATION ----
 def plot_clusters(X_emb, title, results):
     fig, axes = plt.subplots(2, (len(results)+1)//2, figsize=(18, 10))
     axes = axes.flat

@@ -17,199 +17,127 @@ from scripts.xai_face_clustering.models.clustering import cluster_embeddings
 from scripts.xai_face_clustering.models.surrogate import train_surrogate_model
 from scripts.xai_face_clustering.models.xai import run_shap_explanation
 
-# ── Paths for artifacts ────────────────────────────────────────────────
-MODEL_DIR                   = "scripts/xai_face_clustering/models"
-EMBED_CACHE                 = "scripts/xai_face_clustering/features/embeddings.npz"
-PCA_VARIANCE_PLOT_PATH      = "scripts/xai_face_clustering/features/exploratory_plots/pca_explained_variance.png"
-DBSCAN_KDIST_PLOT_PATH      = "scripts/xai_face_clustering/features/exploratory_plots/dbscan_kdistance.png"
-SURROGATE_MODEL_PATH        = os.path.join(MODEL_DIR, "surrogate_model.joblib")
-CLUSTER_MAP_PATH            = os.path.join(MODEL_DIR, "cluster_label_map.json")
+MODEL_DIR = "scripts/xai_face_clustering/models"
+EMBED_CACHE = "scripts/xai_face_clustering/features/embeddings.npz"
+PCA_VARIANCE_PLOT_PATH = "scripts/xai_face_clustering/features/exploratory_plots/pca_explained_variance.png"
+DBSCAN_KDIST_PLOT_PATH = "scripts/xai_face_clustering/features/exploratory_plots/dbscan_kdistance.png"
+SURROGATE_MODEL_PATH = os.path.join(MODEL_DIR, "surrogate_model.joblib")
+CLUSTER_MAP_PATH = os.path.join(MODEL_DIR, "cluster_label_map.json")
+
 
 def main(args):
-    # Ensure directories exist
     os.makedirs(MODEL_DIR, exist_ok=True)
     os.makedirs(os.path.dirname(PCA_VARIANCE_PLOT_PATH), exist_ok=True)
 
-    # ── 1) Load or cache embeddings ────────────────────────────────────────
     if os.path.exists(EMBED_CACHE):
-        print("[INFO] Cached embeddings found; loading…")
+        print("[INFO] Loading cached embeddings...")
         data = np.load(EMBED_CACHE, allow_pickle=True)
         embeddings = data["embeddings"]
-        labels     = data["labels"].tolist()
+        labels = data["labels"].tolist()
     else:
-        print(f"[INFO] Loading images from {args.data_dir}…")
+        print(f"[INFO] Loading images from {args.data_dir}...")
         images, labels, _ = load_images(args.data_dir, as_numpy_list=True)
-        print(f"[INFO] Loaded {len(images)} images. Starting embedding extraction...")
+        print(f"[INFO] Extracting embeddings for {len(images)} images...")
         embeddings, _, labels = extract_embeddings(
-            images,
-            filenames=None,
-            labels=labels,
-            model_name=args.model,
-            cache_path=EMBED_CACHE
+            images, filenames=None, labels=labels, model_name=args.model, cache_path=EMBED_CACHE
         )
-        print(f"[INFO] Embedding extraction complete.")
+        print("[INFO] Embedding extraction complete.")
 
-    # ── 2) Train/test split ────────────────────────────────────────────────
-    print("[INFO] Splitting train/test set…")
+    print("[INFO] Splitting data into training and testing sets...")
     X_train, X_test, y_train_orig, y_test_orig = train_test_split(
-        embeddings,
-        labels,
-        test_size=0.2,
-        random_state=42,
-        stratify=labels
+        embeddings, labels, test_size=0.2, random_state=42, stratify=labels
     )
 
-    # ── 3) PCA explained variance plot ────────────────────────────────────
-    print("[INFO] Plotting PCA explained variance…")
-    plot_pca_variance(
-        X_train,
-        PCA_VARIANCE_PLOT_PATH
-    )
+    print("[INFO] Plotting PCA variance...")
+    plot_pca_variance(X_train, PCA_VARIANCE_PLOT_PATH)
 
-    # ── 4) Scale + PCA ────────────────────────────────────────────────────
-    print(f"[INFO] Applying PCA ({args.pca_components} components)…")
-    X_train_pca = apply_pca(
-        X_train,
-        n_components=args.pca_components,
-        fit=True,
-        save=True
-    )
-    X_test_pca = apply_pca(
-        X_test,
-        n_components=args.pca_components,
-        fit=False,
-        save=False
-    )
+    print(f"[INFO] Reducing dimensions to {args.pca_components} with PCA...")
+    X_train_pca = apply_pca(X_train, args.pca_components, fit=True, save=True)
+    X_test_pca = apply_pca(X_test, args.pca_components, fit=False, save=False)
 
-    # ── 4.5) Optional k-distance plot for DBSCAN ε selection ───────────────
     if args.cluster_method == "dbscan" and args.plot_kdist:
-        print("[INFO] Generating k-distance plot for DBSCAN…")
-        plot_dbscan_kdistance(
-            X_train_pca,
-            DBSCAN_KDIST_PLOT_PATH,
-            k=args.kdist_k
-        )
+        print("[INFO] Creating DBSCAN k-distance plot...")
+        plot_dbscan_kdistance(X_train_pca, DBSCAN_KDIST_PLOT_PATH, k=args.kdist_k)
 
-    # ── 5) Clustering ──────────────────────────────────────────────────────
-    print(f"[INFO] Clustering training set ({args.cluster_method})…")
-    y_train_cluster = cluster_embeddings(
-        X_train_pca,
-        method=args.cluster_method,
-        evaluate_stability=True,
-        true_labels=y_train_orig,
-        eps=args.dbscan_eps,
-        min_samples=args.dbscan_min_samples
-    )
+    print(f"[INFO] Running {args.cluster_method} clustering on training data...")
+    y_train_cluster = cluster_embeddings(X_train_pca, method=args.cluster_method, evaluate_stability=True,
+                                         true_labels=y_train_orig, eps=args.dbscan_eps, min_samples=args.dbscan_min_samples)
 
-    print(f"[INFO] Clustering test set ({args.cluster_method})…")
-    y_test_cluster = cluster_embeddings(
-        X_test_pca,
-        method=args.cluster_method,
-        true_labels=y_test_orig,
-        eps=args.dbscan_eps,
-        min_samples=args.dbscan_min_samples
-    )
-    
-    np.savez("scripts/xai_face_clustering/features/test_clusters.npz",
-         y_test_cluster=y_test_cluster,
-         y_test_orig=y_test_orig)
-    print("[INFO] Clustering complete.")
+    print("[INFO] Running clustering on test data...")
+    y_test_cluster = cluster_embeddings(X_test_pca, method=args.cluster_method, true_labels=y_test_orig,
+                                        eps=args.dbscan_eps, min_samples=args.dbscan_min_samples)
 
+    np.savez("scripts/xai_face_clustering/features/test_clusters.npz", y_test_cluster=y_test_cluster, y_test_orig=y_test_orig)
 
-    # ── 6) Train surrogate classifier ──────────────────────────────────────
-    print(f"[INFO] Training surrogate ({args.surrogate})…")
-    surrogate = train_surrogate_model(
-        X_train_pca, y_train_cluster,
-        X_test_pca,  y_test_cluster,
-        method=args.surrogate
-    )
+    print("[INFO] Training surrogate model...")
+    surrogate = train_surrogate_model(X_train_pca, y_train_cluster, X_test_pca, y_test_cluster, method=args.surrogate)
     joblib.dump(surrogate, SURROGATE_MODEL_PATH)
-    print(f"[INFO] Saved surrogate model to {SURROGATE_MODEL_PATH}")
 
-    # ── 7) Build & save cluster→real/fake map ──────────────────────────────
-    print("[INFO] Building cluster→real/fake map…")
+    print("[INFO] Mapping clusters to real/AI labels...")
     cluster_map = {}
-    for cid in np.unique(y_train_cluster):
-        idxs = np.where(y_train_cluster == cid)[0]
-        orig = [y_train_orig[i] for i in idxs]
-        cluster_map[int(cid)] = int(np.bincount(orig).argmax())
+    unique_clusters = np.unique(y_train_cluster)
+    for cluster_id in unique_clusters:
+        indices = [i for i, val in enumerate(y_train_cluster) if val == cluster_id]
+        corresponding_labels = [y_train_orig[i] for i in indices]
+        most_common_label = max(set(corresponding_labels), key=corresponding_labels.count)
+        cluster_map[int(cluster_id)] = int(most_common_label)
+
     with open(CLUSTER_MAP_PATH, "w") as f:
         json.dump(cluster_map, f)
-    print(f"[INFO] Saved cluster→label map to {CLUSTER_MAP_PATH}")
-    
-    # 1. Surrogate classifier predictions (on test set)
-    y_test_pred_clusters = surrogate.predict(X_test_pca)
 
-    # 2. Map clusters to real/fake using the cluster_map
-    y_test_pred_final = [cluster_map.get(int(c), -1) for c in y_test_pred_clusters]
+    y_pred_clusters = surrogate.predict(X_test_pca)
+    y_pred_final = [cluster_map.get(int(c), -1) for c in y_pred_clusters]
 
-    # 3. Report metrics
-    print("\n=== FINAL ASSIGNMENT METRICS: End-to-end model ===")
-    print("Confusion Matrix:")
-    print(confusion_matrix(y_test_orig, y_test_pred_final))
-    print("Classification Report:")
-    print(classification_report(y_test_orig, y_test_pred_final, target_names=["Real", "AI"]))
+    print("\n=== Final Model Results ===")
+    #confusion matrix with false positives, false negatives, true negatives 
+    print(confusion_matrix(y_test_orig, y_pred_final))
+    print(classification_report(y_test_orig, y_pred_final, target_names=["Real", "AI"]))
 
-    # Optionally, print the number of unmapped clusters (should be zero in normal cases)
-    if -1 in y_test_pred_final:
-        unmapped = sum([1 for x in y_test_pred_final if x == -1])
-        print(f"Warning: {unmapped} test samples could not be mapped to any real/fake class.")
+    if -1 in y_pred_final:
+        print(f"[WARNING] {y_pred_final.count(-1)} test predictions could not be mapped.")
 
-    # === BASELINE: Spectral Clustering + Logistic Regression ===
-    print("\n=== BASELINE: Spectral Clustering + Logistic Regression ===")
-
-    # 1. Spectral Clustering on train/test
+    print("\n=== Baseline: Spectral Clustering + Logistic Regression ===")
     n_clusters = len(np.unique(y_train_orig))
     spectral = SpectralClustering(n_clusters=n_clusters, affinity='nearest_neighbors', random_state=42, n_neighbors=10)
     y_train_spectral = spectral.fit_predict(X_train_pca)
-    # SpectralClustering has no .predict, so we'll assign clusters for test points using nearest cluster centroid
+
     cluster_centers = []
-    for cid in range(n_clusters):
-        pts = X_train_pca[y_train_spectral == cid]
-        if len(pts) > 0:
-            cluster_centers.append(np.mean(pts, axis=0))
+    for cluster_id in range(n_clusters):
+        points = X_train_pca[y_train_spectral == cluster_id]
+        if len(points) > 0:
+            center = np.mean(points, axis=0)
         else:
-            # Handle empty clusters robustly
-            cluster_centers.append(np.zeros(X_train_pca.shape[1]))
+            center = np.zeros(X_train_pca.shape[1])
+        cluster_centers.append(center)
 
-    # For each test point, assign to closest spectral cluster
-    from scipy.spatial.distance import cdist
-    dists = cdist(X_test_pca, np.vstack(cluster_centers))
-    y_test_spectral = np.argmin(dists, axis=1)
+    distances = cdist(X_test_pca, np.vstack(cluster_centers))
+    y_test_spectral = np.argmin(distances, axis=1)
 
-    # 2. Map clusters to true labels (as with GMM baseline)
     spectral_cluster_map = {}
-    for cid in np.unique(y_train_spectral):
-        idxs = np.where(y_train_spectral == cid)[0]
-        orig = [y_train_orig[i] for i in idxs]
-        if orig:
-            spectral_cluster_map[int(cid)] = int(np.bincount(orig).argmax())
+    for cluster_id in np.unique(y_train_spectral):
+        idxs = np.where(y_train_spectral == cluster_id)[0]
+        labels_for_cluster = [y_train_orig[i] for i in idxs]
+        if labels_for_cluster:
+            spectral_cluster_map[int(cluster_id)] = max(set(labels_for_cluster), key=labels_for_cluster.count)
         else:
-            spectral_cluster_map[int(cid)] = -1
+            spectral_cluster_map[int(cluster_id)] = -1
 
-    # 3. Train surrogate classifier (logreg)
     baseline_logreg = LogisticRegression(max_iter=1000)
     baseline_logreg.fit(X_train_pca, y_train_spectral)
-    y_test_pred_spectral = baseline_logreg.predict(X_test_pca)
-    y_test_pred_final_spectral = [spectral_cluster_map.get(int(c), -1) for c in y_test_pred_spectral]
+    y_pred_spectral = baseline_logreg.predict(X_test_pca)
+    y_pred_final_spectral = [spectral_cluster_map.get(int(c), -1) for c in y_pred_spectral]
 
-    # 4. Report baseline metrics
-    print("\nConfusion Matrix:")
-    print(confusion_matrix(y_test_orig, y_test_pred_final_spectral))
-    print("Classification Report:")
-    print(classification_report(y_test_orig, y_test_pred_final_spectral, target_names=["Real", "AI"]))
+    print(confusion_matrix(y_test_orig, y_pred_final_spectral))
+    print(classification_report(y_test_orig, y_pred_final_spectral, target_names=["Real", "AI"]))
 
-    # Optionally, print the number of unmapped clusters (should be zero in normal cases)
-    if -1 in y_test_pred_final_spectral:
-        unmapped = sum([1 for x in y_test_pred_final_spectral if x == -1])
-        print(f"Warning: {unmapped} test samples could not be mapped to any real/fake class.")
+    if -1 in y_pred_final_spectral:
+        print(f"[WARNING] {y_pred_final_spectral.count(-1)} test samples not mapped.")
 
-
-    # ── 8) Optional SHAP explanations ───────────────────────────────────────
     if args.shap:
-        print("[INFO] Generating SHAP explanations…")
+        print("[INFO] Running SHAP explanations...")
         run_shap_explanation(surrogate, X_test_pca, y_test_cluster)
-        print("[INFO] SHAP explanations done.")
+        print("[INFO] SHAP explanations complete.")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="XAI Face Clustering Pipeline")
@@ -273,5 +201,6 @@ if __name__ == "__main__":
         action="store_true",
         help="Whether to run SHAP explanations"
     )
+
     args = parser.parse_args()
     main(args)

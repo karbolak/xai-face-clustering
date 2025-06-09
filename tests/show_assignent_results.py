@@ -3,44 +3,39 @@ import joblib
 import matplotlib.pyplot as plt
 import os
 
-# --- File paths ---
-EMBED_PATH = "scripts/xai_face_clustering/features/embeddings.npz"
-SVM_PATH   = "scripts/xai_face_clustering/models/surrogate_model.joblib"
-PCA_PATH   = "scripts/xai_face_clustering/models/pca_model.joblib"
-CLUSTER_MAP_PATH = "scripts/xai_face_clustering/models/cluster_label_map.json"
+EMBED_PATH = "xai_face_clustering/features/embeddings.npz"
+SVM_PATH   = "xai_face_clustering/models/surrogate_model.joblib"
+PCA_PATH   = "xai_face_clustering/models/pca_model.joblib"
+CLUSTER_MAP_PATH = "xai_face_clustering/models/cluster_label_map.json"
 
-# --- Load Data ---
 data = np.load(EMBED_PATH, allow_pickle=True)
 X = data['embeddings']
 y_true = np.array(data['labels'])  # 0=Real, 1=AI
 
-# --- Load PCA model and apply to embeddings ---
 pca_model = joblib.load(PCA_PATH)
-X_pca = pca_model.transform(X)  # Shape: (N, n_pca_components)
+X_pca = pca_model.transform(X)  # shape: (N, n_pca_components)
 
-# --- Load SVM surrogate and predict cluster assignments ---
 svm = joblib.load(SVM_PATH)
 if X_pca.shape[1] != svm.n_features_in_:
     raise ValueError(f"PCA output shape {X_pca.shape[1]} does not match SVM input {svm.n_features_in_}.")
 
 cluster_pred = svm.predict(X_pca)
 
-# --- Optionally map cluster assignment to "real"/"AI" via saved mapping ---
 if os.path.exists(CLUSTER_MAP_PATH):
     import json
     with open(CLUSTER_MAP_PATH, 'r') as f:
         cluster_map = json.load(f)
-    # Cluster IDs could be int or str in map
+    
     mapped_labels = np.array([cluster_map.get(str(c), -1) for c in cluster_pred])
 else:
     mapped_labels = cluster_pred
 
-# --- Project for 2D visualization (another PCA for 2D) ---
+# project for 2D visualization (another PCA for 2D)
 from sklearn.decomposition import PCA
 pca_vis = PCA(n_components=2)
-X_vis = pca_vis.fit_transform(X_pca)  # Or use X for "raw" 2D projection
+X_vis = pca_vis.fit_transform(X_pca)  # else X for "raw" 2D projection
 
-# --- Plot: True Label vs SVM-Cluster Assignment ---
+# plot true Label vs SVM-cluster assignment
 plt.figure(figsize=(10,8))
 markers = {0: 'o', 1: 's'}  # o for Real, s for AI
 colors = ['tab:blue', 'tab:orange']
@@ -57,7 +52,7 @@ for true_class, label_str, color in zip([0, 1], ['Real', 'AI'], colors):
             edgecolor='k',
             linewidths=0.2,
             s=25,
-            c=color if cluster == 0 else None  # Alternate color by cluster if you like
+            c=color if cluster == 0 else None  
         )
 
 plt.title("SVM Surrogate Cluster Assignments vs. Ground Truth")
@@ -67,7 +62,7 @@ plt.legend(fontsize="small", loc="best", frameon=True, ncol=1)
 plt.tight_layout()
 plt.show()
 
-# --- (Optional) Highlight where predicted class != true label ---
+# optional alternative to highlight where predicted class != true
 misclassified = mapped_labels != y_true
 if np.any(misclassified):
     plt.figure(figsize=(10,8))

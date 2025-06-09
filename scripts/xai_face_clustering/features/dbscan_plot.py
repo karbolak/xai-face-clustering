@@ -19,17 +19,17 @@ def plot_dbscan_kdistance(
         output_path (str): where to save the plot.
         k (int): which neighbor distance to plot (default=5).
     """
-    # Standardize
+    #standardize
     scaler = StandardScaler()
     X = scaler.fit_transform(embeddings)
 
-    # Compute k-th neighbor distances
+    #compute k-th neighbor distances
     nbrs = NearestNeighbors(n_neighbors=k)
     nbrs.fit(X)
     distances, _ = nbrs.kneighbors(X)
     k_distances = np.sort(distances[:, k - 1])
 
-    # Plot
+
     plt.figure(figsize=(8, 5))
     plt.plot(k_distances)
     plt.xlabel(f'Points sorted by distance to {k}th NN')
@@ -38,7 +38,7 @@ def plot_dbscan_kdistance(
     plt.grid(True)
     plt.tight_layout()
 
-    # Save
+
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     plt.savefig(output_path)
     plt.close()
