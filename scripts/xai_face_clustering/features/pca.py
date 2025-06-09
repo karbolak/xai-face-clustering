@@ -17,9 +17,11 @@ def apply_pca(features, n_components=50, fit=True, save=True):
         We can later load and apply PCA using fit=False   
     """
     if fit:
+        #scale
         scaler = StandardScaler()
         features_scaled = scaler.fit_transform(features)
 
+        #pca fit
         pca = PCA(n_components=n_components)
         reduced = pca.fit_transform(features_scaled)
 
@@ -28,6 +30,7 @@ def apply_pca(features, n_components=50, fit=True, save=True):
             joblib.dump(pca, PCA_SAVE_PATH)
             joblib.dump(scaler, SCALER_SAVE_PATH)
     else:
+        #load
         pca = joblib.load(PCA_SAVE_PATH)
         scaler = joblib.load(SCALER_SAVE_PATH)
         features_scaled = scaler.transform(features)

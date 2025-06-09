@@ -7,6 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.cluster import SpectralClustering
 from sklearn.linear_model import LogisticRegression
+from scipy.spatial.distance import cdist
 
 from scripts.xai_face_clustering.data.loader import load_images
 from scripts.xai_face_clustering.features.cnn_embeddings import extract_embeddings
