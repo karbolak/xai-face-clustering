@@ -1,5 +1,5 @@
 import torch
-from xai_face_clustering.features.cnn_embeddings import extract_embeddings
+from scripts.xai_face_clustering.features.cnn_embeddings import extract_embeddings
 
 def test_embeddings_shape():
     dummy_input = torch.randn(10, 3, 224, 224)  # 10 dummy images

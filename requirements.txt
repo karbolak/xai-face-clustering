@@ -1,11 +1,12 @@
 # Core
-pytorch>=1.13 # if you're using pip, use torch
+torch>=1.13 # if you're using conda, use torch-python
 torchvision
 numpy
 scikit-learn
 matplotlib
 pandas
-opencv # if you're using pip, use opencv-python
+opencv-python # if you're using conda, use opencv
+facenet-pytorch
 
 # Explainability
 shap # If shap gives warnings related to numba, just lmk -- there's a known fix
@@ -25,3 +26,7 @@ pytest-cov
 # Utility
 tqdm
 joblib
+uvicorn
+fastapi
+streamlit
+python-multipart
