@@ -92,9 +92,9 @@ async def predict(
         mapped_label = "AI" if mapped_label_num == 1 else "Real" if mapped_label_num == 0 else "Unknown"
     else:
         mapped_label = "AI" if pred_cluster == 1 else "Real"
-
     # Step 6: SHAP plot (only if requested)
     shap_img = None
+    shap_err = None
     if shap and background is not None:
         try:
             explainer = shap.KernelExplainer(surrogate.predict_proba, background)
@@ -110,7 +110,12 @@ async def predict(
             buf.seek(0)
             shap_img = base64.b64encode(buf.read()).decode("utf-8")
         except Exception as e:
-            shap_img = None
+            print("SHAP ERROR:", e)
+            shap_err = str(e)
+    else:
+        if shap:
+            shap_err = "SHAP background not loaded"
+
 
     # Step 7: Debug output
     debug_info = None
@@ -136,6 +141,8 @@ async def predict(
         response["debug"] = debug_info
     if shap and shap_img is not None:
         response["shap_plot"] = shap_img
+    elif shap and shap_err:
+        response["shap_error"] = shap_err
 
     print("FINAL RESPONSE:", response)
     return response
@@ -162,18 +169,31 @@ async def shap_image(
         else:
             mapped_label_num = int(pred_cluster)
 
-        # SHAP explanation
-        explainer = shap.KernelExplainer(surrogate.predict_proba, background)
+        # SHAP summary background for speed
+        if background.shape[0] > 100:
+            background_summary = shap.kmeans(background, 20)
+        else:
+            background_summary = background
+        explainer = shap.KernelExplainer(surrogate.predict_proba, background_summary)
         shap_vals = explainer.shap_values(emb_pca)
 
-        fig = plt.figure()
-        # If shap_vals is a list (multiclass), select correct class by mapped_label_num
-        if isinstance(shap_vals, list) and len(shap_vals) == 2:
-            shap.plots.waterfall(shap_vals[mapped_label_num][0], show=False)
+        expected_value = explainer.expected_value
+        # Use Explanation object
+        if isinstance(shap_vals, list):
+            sv = shap_vals[mapped_label_num][0]  # pick class and first sample
+            ev = expected_value[mapped_label_num]
         else:
-            shap.plots.waterfall(shap_vals[0], show=False)
+            sv = shap_vals[0]
+            ev = expected_value
 
-        plt.title(f"SHAP Waterfall: {'AI' if mapped_label_num == 1 else 'Real'}")
+        expl = shap.Explanation(
+            values=sv,
+            base_values=ev,
+            data=emb_pca[0]
+        )
+
+        fig = plt.figure()
+        shap.plots.waterfall(expl, show=False)
         buf = BytesIO()
         plt.savefig(buf, format='png')
         plt.close(fig)
