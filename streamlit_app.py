@@ -5,6 +5,8 @@ import json
 import os
 import cv2
 import torch
+import shap
+import matplotlib.pyplot as plt
 
 from facenet_pytorch import InceptionResnetV1
 from torchvision import transforms
@@ -117,3 +119,50 @@ if uploaded:
         label     = "Real" if label_num == 0 else "AI-Generated"
 
     st.success(f"**Prediction:** {label}")
+
+    show_shap = st.checkbox("Show SHAP Explanation (may be slow)", value=False)
+
+    if show_shap:
+        if not os.path.exists(EMBEDDINGS_CACHE):
+            st.error("No embeddings cache found for SHAP background.")
+        else:
+            data = np.load(EMBEDDINGS_CACHE, allow_pickle=True)
+            X_bg = data["embeddings"]
+            X_bg_s = scaler.transform(X_bg)
+            X_bg_p = pca.transform(X_bg_s)
+
+            K = 20
+            bg_summary = shap.kmeans(X_bg_p, K)
+
+            with st.spinner("Computing SHAP (should be much faster now!)…"):
+                try:
+                    explainer = shap.KernelExplainer(clf.predict_proba, bg_summary)
+                    shap_vals = explainer.shap_values(emb_p)
+
+                    idx = label_num if label_num in [0, 1] else 0
+                    base_value = explainer.expected_value[idx] if isinstance(explainer.expected_value, (list, np.ndarray)) else explainer.expected_value
+                    values = shap_vals[idx][0]
+                    data_point = emb_p[0]
+                    feature_names = [f'PC{i+1}' for i in range(emb_p.shape[1])]
+
+                    # Only plot top N features (by absolute SHAP value)
+                    TOP_N = 20  # change as desired
+                    abs_order = np.argsort(np.abs(values))[::-1][:TOP_N]
+
+                    values_plot = values[abs_order]
+                    data_plot = data_point[abs_order]
+                    feature_names_plot = [feature_names[i] for i in abs_order]
+
+                    shap_exp = shap.Explanation(
+                        values=values_plot,
+                        base_values=base_value,
+                        data=data_plot,
+                        feature_names=feature_names_plot
+                    )
+
+                    fig = plt.figure()
+                    shap.plots.waterfall(shap_exp, show=False)
+                    st.pyplot(fig)
+                    plt.close(fig)
+                except Exception as e:
+                    st.error(f"SHAP computation failed: {e}")
