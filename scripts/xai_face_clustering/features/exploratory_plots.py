@@ -8,13 +8,13 @@ from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 
 #constants
-REAL_DIR = 'scripts/xai_face_clustering/data/Human_Faces_ds/fake'
-FAKE_DIR = 'scripts/xai_face_clustering/data/Human_Faces_ds/real'
+REAL_DIR = 'scripts/xai_face_clustering/data/Human_Faces_Dataset/AI-Generated_Images'
+FAKE_DIR = 'scripts/xai_face_clustering/data/Human_Faces_Dataset/Real_Images'
 IMG_SIZE = (128, 128)
 LBP_RADIUS = 1
 LBP_POINTS = 8 * LBP_RADIUS
 
-OUTPUT_DIR = 'xai_face_clustering/features/exploratory_plots'
+OUTPUT_DIR = 'scripts/xai_face_clustering/features/exploratory_plots'
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 #feature lists

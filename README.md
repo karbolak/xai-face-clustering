@@ -1,10 +1,11 @@
 # Our README
 
-python -m uvicorn scripts.xai_face_clustering.api.inference_api:app --reload
+python -m uvicorn inference_api:app --reload
+After running the line, this link can be accessed to visualise the website: http://127.0.0.1:8000/docs
 
-curl -X POST "http://127.0.0.1:8000/predict" -F "file=@/home/karbolak/Documents/Uni/AppliedML/AppliedML_project/scripts/xai_face_clustering/data/Human_Faces_ds/fake/FLUX1_dev_image_0000015.jpg"
+curl -X POST "http://127.0.0.1:8000/predict" -F "file=@/home/karbolak/Documents/Uni/AppliedML/AppliedML_project/scripts/xai_face_clustering/data/Human_Faces_Dataset/AI-Generated_Images/000003.jpg"
 
-
+curl -X POST "http://127.0.0.1:8000/predict" -F "file=@/Users/sarabota/Desktop/AppliedML/AppliedML_project/scripts/xai_face_clustering/data/Human_Faces_Dataset/AI-Generated_Images/000003.jpg"
 
 
 ## Install current requirements with:
