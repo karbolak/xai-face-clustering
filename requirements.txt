@@ -1,11 +1,11 @@
 # Core
-pytorch>=1.13 # if you're using pip, use torch
+torch>=1.13 # if you're using conda, use torch-python
 torchvision
 numpy
 scikit-learn
 matplotlib
 pandas
-opencv # if you're using pip, use opencv-python
+opencv-python # if you're using conda, use opencv
 facenet-pytorch
 
 # Explainability

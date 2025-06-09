@@ -18,18 +18,23 @@ Make sure the path points to a valid image file on your machine.
 
 ## 📦 Environment Setup
 
-### 1. Conda (Recommended)
+### 1. Environment creation
 ```bash
 conda create -n aml-env python=3.10
 conda activate aml-env
-conda config --add channels conda-forge
-conda install --yes --file requirements.txt
 ```
 
-### 2. pip (if not using conda)
-Ensure `requirements.txt` uses compatible names (e.g., `torch`, `opencv-python`):
+### 2. pip (recommended)
 ```bash
 pip install -r requirements.txt
+```
+
+### 2. conda (if not using pip)
+
+```bash
+conda config --add channels conda-forge
+# Ensure `requirements.txt` uses compatible names (e.g., `pytorch`, `opencv`):
+conda install --yes --file requirements.txt
 ```
 
 
