@@ -9,7 +9,8 @@ from scripts.xai_face_clustering.features.cnn_embeddings import extract_embeddin
 
 
 MODEL_DIR = "scripts/xai_face_clustering/models"
-SVM_MODEL_PATH = os.path.join(MODEL_DIR, "svm_model.joblib")
+SVM_MODEL_PATH = "scripts/xai_face_clustering/models/surrogate_model.joblib"
+
 SCALER_PATH = os.path.join(MODEL_DIR, "scaler.joblib")
 PCA_PATH = os.path.join(MODEL_DIR, "pca_model.joblib")
 EMBED_CACHE = "scripts/xai_face_clustering/features/embeddings.npz"

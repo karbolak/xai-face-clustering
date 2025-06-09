@@ -7,4 +7,4 @@ def test_shap_explanation_runs(tmp_path):
     y = [0]*5 + [1]*5
     model = LogisticRegression().fit(X, y)
     run_shap_explanation(model, X, y, num_examples=2)
-    # Should not crash; files are saved to disk
+    #should not crash; files are saved to disk

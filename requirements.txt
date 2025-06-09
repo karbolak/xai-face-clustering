@@ -6,6 +6,7 @@ scikit-learn
 matplotlib
 pandas
 opencv # if you're using pip, use opencv-python
+facenet-pytorch
 
 # Explainability
 shap # If shap gives warnings related to numba, just lmk -- there's a known fix
@@ -25,3 +26,6 @@ pytest-cov
 # Utility
 tqdm
 joblib
+uvicorn
+fastapi
+streamlit

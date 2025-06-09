@@ -3,10 +3,10 @@ import joblib
 import matplotlib.pyplot as plt
 import os
 
-EMBED_PATH = "xai_face_clustering/features/embeddings.npz"
-SVM_PATH   = "xai_face_clustering/models/surrogate_model.joblib"
-PCA_PATH   = "xai_face_clustering/models/pca_model.joblib"
-CLUSTER_MAP_PATH = "xai_face_clustering/models/cluster_label_map.json"
+EMBED_PATH = "scripts/xai_face_clustering/features/embeddings.npz"
+SVM_PATH   = "scripts/xai_face_clustering/models/surrogate_model.joblib"
+PCA_PATH   = "scripts/xai_face_clustering/models/pca_model.joblib"
+CLUSTER_MAP_PATH = "scripts/xai_face_clustering/models/cluster_label_map.json"
 
 data = np.load(EMBED_PATH, allow_pickle=True)
 X = data['embeddings']
