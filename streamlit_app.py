@@ -134,30 +134,32 @@ if uploaded:
             K = 20
             bg_summary = shap.kmeans(X_bg_p, K)
 
-            with st.spinner("Computing SHAP (should be much faster now!)…"):
+            with st.spinner("Computing SHAP..."):
                 try:
                     explainer = shap.KernelExplainer(clf.predict_proba, bg_summary)
                     shap_vals = explainer.shap_values(emb_p)
 
                     idx = label_num if label_num in [0, 1] else 0
-                    base_value = explainer.expected_value[idx] if isinstance(explainer.expected_value, (list, np.ndarray)) else explainer.expected_value
-                    values = shap_vals[idx][0]
-                    data_point = emb_p[0]
-                    feature_names = [f'PC{i+1}' for i in range(emb_p.shape[1])]
+                    if isinstance(shap_vals, list):
+                        sv = np.array(shap_vals[idx][0])
+                        ev = explainer.expected_value[idx]
+                    else:
+                        sv = np.array(shap_vals[0])
+                        ev = explainer.expected_value
 
-                    # Only plot top N features (by absolute SHAP value)
-                    TOP_N = 20  # change as desired
-                    abs_order = np.argsort(np.abs(values))[::-1][:TOP_N]
+                    if sv.ndim > 1:
+                        sv = sv.squeeze()
+                    if sv.ndim > 1:
+                        sv = sv.ravel()[:emb_p.shape[1]]
 
-                    values_plot = values[abs_order]
-                    data_plot = data_point[abs_order]
-                    feature_names_plot = [feature_names[i] for i in abs_order]
+                    if isinstance(ev, (np.ndarray, list)) and len(np.array(ev).shape) > 0:
+                        ev = float(np.array(ev).flatten()[0])
 
                     shap_exp = shap.Explanation(
-                        values=values_plot,
-                        base_values=base_value,
-                        data=data_plot,
-                        feature_names=feature_names_plot
+                        values=sv,
+                        base_values=ev,
+                        data=emb_p[0],
+                        feature_names=[f'PC{i+1}' for i in range(emb_p.shape[1])]
                     )
 
                     fig = plt.figure()

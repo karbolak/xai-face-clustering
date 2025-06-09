@@ -60,50 +60,67 @@ def get_embedding(img: Image.Image):
 
 @app.post("/predict")
 async def predict(
-    shap: str = Query("false", description="Return SHAP explanation for this image"),
+    shap_enabled: str = Query("false", description="Return SHAP explanation for this image"),
     debug: str = Query("false", description="Return debug info for this image"),
     file: UploadFile = File(...),
 ):
-    # Parse query params as booleans (robust to curl/python)
     print(f"RAW debug param: {debug!r}")
-    shap = str(shap).strip().lower() in ("true", "1", "yes")
+    shap_enabled = str(shap_enabled).strip().lower() in ("true", "1", "yes")
     debug = str(debug).strip().lower() in ("true", "1", "yes")
     print("PARSED debug value:", debug)
     
-    # Step 1: Read and preprocess
     image = Image.open(io.BytesIO(await file.read())).convert("RGB")
     emb = get_embedding(image)
 
-    # Step 2: PCA transform
     emb_pca = pca.transform([emb])
 
-    # Step 3: Predict cluster using surrogate
     pred_cluster = surrogate.predict(emb_pca)[0]
 
-    # Step 4: SVM confidence/probability
     if hasattr(surrogate, "predict_proba"):
         proba = surrogate.predict_proba(emb_pca)[0]
     else:
         proba = None
 
-    # Step 5: Cluster→label mapping
     if cluster_map is not None:
         mapped_label_num = cluster_map.get(str(pred_cluster), "Unknown")
         mapped_label = "AI" if mapped_label_num == 1 else "Real" if mapped_label_num == 0 else "Unknown"
     else:
         mapped_label = "AI" if pred_cluster == 1 else "Real"
-    # Step 6: SHAP plot (only if requested)
     shap_img = None
     shap_err = None
-    if shap and background is not None:
+    if shap_enabled and background is not None:
         try:
             explainer = shap.KernelExplainer(surrogate.predict_proba, background)
             shap_vals = explainer.shap_values(emb_pca)
-            fig = plt.figure()
+
+            print("DEBUG SHAP: type", type(shap_vals))
             if isinstance(shap_vals, list):
-                shap.plots.waterfall(shap_vals[int(mapped_label_num)][0], show=False)
+                print("shap_vals[class][sample] shape:", np.array(shap_vals[0]).shape)
+                sv = np.array(shap_vals[int(mapped_label_num)][0])
+                ev = explainer.expected_value[int(mapped_label_num)]
             else:
-                shap.plots.waterfall(shap_vals[0], show=False)
+                print("shap_vals[0] shape:", np.array(shap_vals[0]).shape)
+                sv = np.array(shap_vals[0])
+                ev = explainer.expected_value
+
+            if sv.ndim > 1:
+                print("Warning: SHAP values not 1D, squeezing:", sv.shape)
+                sv = sv.squeeze()
+            if sv.ndim > 1:
+                print("SHAP values still not 1D after squeeze! Shape:", sv.shape)
+                sv = sv.ravel()[:emb_pca.shape[1]]
+
+            if isinstance(ev, (np.ndarray, list)) and len(np.array(ev).shape) > 0:
+                ev = float(np.array(ev).flatten()[0])
+
+            expl = shap.Explanation(
+                values=sv,
+                base_values=ev,
+                data=emb_pca[0]
+            )
+
+            fig = plt.figure()
+            shap.plots.waterfall(expl, show=False)
             buf = BytesIO()
             plt.savefig(buf, format='png')
             plt.close(fig)
@@ -113,11 +130,11 @@ async def predict(
             print("SHAP ERROR:", e)
             shap_err = str(e)
     else:
-        if shap:
+        if shap_enabled:
             shap_err = "SHAP background not loaded"
 
 
-    # Step 7: Debug output
+
     debug_info = None
     if debug:
         debug_info = {
@@ -126,78 +143,22 @@ async def predict(
             "cluster_map_used": cluster_map,
             "mapped_label": mapped_label,
             "SVM_probability_vector": proba.tolist() if proba is not None else "not available",
-            "pca_embedding_preview": emb_pca[0][:10].tolist(),  # show first 10 components
+            "pca_embedding_preview": emb_pca[0][:10].tolist(),
             "pca_embedding_shape": emb_pca.shape
         }
         print("--- API PREDICTION DEBUG ---")
         for k, v in debug_info.items():
             print(f"{k}: {v}")
 
-    # Step 8: Return output
     response = {
         "prediction": mapped_label,
     }
     if debug:
         response["debug"] = debug_info
-    if shap and shap_img is not None:
+    if shap_enabled and shap_img is not None:
         response["shap_plot"] = shap_img
-    elif shap and shap_err:
+    elif shap_enabled and shap_err:
         response["shap_error"] = shap_err
 
     print("FINAL RESPONSE:", response)
     return response
-
-
-@app.post("/shap_image", tags=["Visualization"])
-async def shap_image(
-    file: UploadFile = File(...),
-):
-    # Step 1: Read and preprocess
-    image = Image.open(io.BytesIO(await file.read())).convert("RGB")
-    emb = get_embedding(image)
-    emb_pca = pca.transform([emb])
-    pred_cluster = surrogate.predict(emb_pca)[0]
-
-    if background is None:
-        return Response(content="No SHAP background available", media_type="text/plain")
-    try:
-        # Get the mapped label index (0 or 1)
-        if cluster_map is not None:
-            mapped_label_num = cluster_map.get(str(pred_cluster), None)
-            if mapped_label_num not in (0, 1):
-                mapped_label_num = 0  # fallback (shouldn't happen if map is correct)
-        else:
-            mapped_label_num = int(pred_cluster)
-
-        # SHAP summary background for speed
-        if background.shape[0] > 100:
-            background_summary = shap.kmeans(background, 20)
-        else:
-            background_summary = background
-        explainer = shap.KernelExplainer(surrogate.predict_proba, background_summary)
-        shap_vals = explainer.shap_values(emb_pca)
-
-        expected_value = explainer.expected_value
-        # Use Explanation object
-        if isinstance(shap_vals, list):
-            sv = shap_vals[mapped_label_num][0]  # pick class and first sample
-            ev = expected_value[mapped_label_num]
-        else:
-            sv = shap_vals[0]
-            ev = expected_value
-
-        expl = shap.Explanation(
-            values=sv,
-            base_values=ev,
-            data=emb_pca[0]
-        )
-
-        fig = plt.figure()
-        shap.plots.waterfall(expl, show=False)
-        buf = BytesIO()
-        plt.savefig(buf, format='png')
-        plt.close(fig)
-        buf.seek(0)
-        return Response(content=buf.read(), media_type="image/png")
-    except Exception as e:
-        return Response(content=f"Error generating SHAP plot: {e}", media_type="text/plain")
