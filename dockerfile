@@ -16,9 +16,14 @@ RUN apt-get update && apt-get -y upgrade && \
 ENV CONDA_DIR=/opt/conda
 ENV PATH=/opt/conda/bin:$PATH
 
-RUN wget --quiet https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-aarch64.sh -O miniforge.sh && \
-    bash miniforge.sh -b -p $CONDA_DIR && \
-    rm miniforge.sh
+
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh && \
+    bash miniconda.sh -b -p $CONDA_DIR && \
+    rm miniconda.sh
+#if architecture is of type ARM64 or AARCH64 comment the anaconda link above and ucomment the one below
+# RUN wget --quiet https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-aarch64.sh -O miniforge.sh && \
+#     bash miniforge.sh -b -p $CONDA_DIR && \
+#     rm miniforge.sh
 
 SHELL ["/bin/bash", "-c"]
 

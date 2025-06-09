@@ -38,11 +38,25 @@ git add scripts/xai_face_clustering/features/embeddings.npz
 AppliedML_project/
 ├── main.py
 ├── inference_api.py
+├── streamlit_app.py
 ├── README.md
 ├── requirements.txt
 ├── tests/
 │   ├── test_main.py
-│   └── (unit tests by module)
+│   └── test_clusters.py
+│   └── show_assignment_result.py
+│   └── investigate_single_image_mainstyle.py
+│   └── clustering_testing.py
+│   └── api_test.py
+│   └── xai_face_clustering/
+│       ├── features/
+│       │   ├── test_embeddings.py
+│       │   ├── test_loader.py
+│       │   ├── test_pca.py
+│       ├── models/
+│       │   ├── test_clustering.py
+│       │   ├── test_surrogate.py
+│       │   └── test_xai.py
 ├── scripts/
 │   └── xai_face_clustering/
 │       ├── data/
@@ -90,8 +104,9 @@ Controls the full pipeline via CLI:
 
 ## Visual Flow of Pipeline
 
-![Flowchart part 1](flowchart_1.png)
-![Flowchart part 2](flowchart_2.png)
+![Flowchart 1](scripts/xai_face_clustering/features/exploratory_plots/flowchart_1.png)
+![Flowchart 2](scripts/xai_face_clustering/features/exploratory_plots/flowchart_2.png)
+
 
 
 ## API Usage
@@ -119,6 +134,8 @@ Once the build is done, the image can be run on an interactive shell(defualt -> 
 ```bash
 docker run -it xai-face-clustering
 ```
+####Note
+Please check the docker file to ensure proper architecture handling.
 
 ###Dockerised web
 To run the fastapi, enter this command in your CLI:
