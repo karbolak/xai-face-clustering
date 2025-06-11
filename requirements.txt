@@ -17,6 +17,7 @@ umap-learn
 seaborn
 mahotas
 scikit-image
+pillow
 
 
 # Testing
