@@ -1,5 +1,7 @@
 # XAI Face Clustering
 
+XAI Face Clustering is an explainable machine learning pipeline for analyzing and clustering real and AI-generated face images. The project extracts image embeddings using pretrained CNNs, reduces their dimensionality with PCA, and applies unsupervised clustering methods such as K-Means, DBSCAN, and GMM. Interpretable surrogate models and SHAP explanations are then used to identify the visual features influencing cluster assignments. The pipeline can be run through a command-line interface, FastAPI inference server, or Streamlit web application.
+
 ## Environment Setup
 
 ### 1. Environment creation
@@ -134,10 +136,10 @@ Once the build is done, the image can be run on an interactive shell(defualt -> 
 ```bash
 docker run -it xai-face-clustering
 ```
-####Note
+#### Note
 Please check the docker file to ensure proper architecture handling.
 
-###Dockerised web
+### Dockerised web
 To run the fastapi, enter this command in your CLI:
 ```bash
 docker run -it -p 8000:8000 xai-face-clustering python -m uvicorn inference_api:app --host 0.0.0.0 --port 8000
